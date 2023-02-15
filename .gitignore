@@ -1,0 +1,5 @@
+# credentials or config
+.env
+
+# node modules
+/node_modules
