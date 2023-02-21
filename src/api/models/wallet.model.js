@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 
 const walletSchema = new mongoose.Schema({
     username:String,
+    email:String,
     password:String,
+    verified:Boolean,
     walletInfo: {
         publicKey: String,
         privateKey: String,

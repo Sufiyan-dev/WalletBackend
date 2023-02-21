@@ -1,9 +1,9 @@
 import express from 'express'
 import dotenv from 'dotenv'
 
-import db from './src/config/db.config.js'
-import { userModel } from './src/api/models/user.model.js';
 import { signin, signup } from './src/api/routes/user.route.js'
+import { confirmOtp, generateOtp } from './src/api/routes/otp.route.js';
+import { checkBalanceOfToken, transferToken } from './src/api/routes/transaction.route.js';
 dotenv.config()
 
 const app = express();
@@ -13,21 +13,17 @@ app.get('/',(req,res) => {
     res.send("Hey")
 })
 
-app.get('/dbinfo',(req,res) => {
-    let name = db.name
-    res.send(name)
-})
+app.post('/signin/:username',signin)
 
-app.get('/collections',(req,res) => {
-    let collections = db.collections
-    console.log(collections.users.name)
-    res.send(collections.users.name)
-})
+app.post('/signup/:username',signup)
 
-app.post('/signin/:name',signin)
+app.post('/otp/generate/:username',generateOtp)
 
-app.post('/signup/:name',signup)
+app.post("/otp/confirm/:username",confirmOtp)
 
-const PORT = process.env.PORT || 5000
+app.post("/transfer/token/:username",transferToken)
 
+app.get("/check/balance/:address",checkBalanceOfToken)
+
+const PORT = process.env.PORT || 3000
 app.listen(PORT,() => console.log(`App listening to http://localhost:${PORT}`))

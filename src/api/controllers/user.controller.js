@@ -2,13 +2,15 @@ import { getUser, registerUser } from "../services/user.service.js"
 
 
 async function signinControl(req, res){
-   // getting the username
-   let user = req.params.name
+    // console.log("params ",req.params)
+    // console.log("body ",req.body)
+   // getting the email
+   let username = req.params.username
 
    // getting password
    let password = req.body.password
    try {
-       let response = await getUser(user, password)
+       let response = await getUser(username, password)
        console.log("controller signin response received : ",response)
        res.send(response)
     //    return
@@ -18,15 +20,12 @@ async function signinControl(req, res){
 }
 
 async function signupController(req,res){
-    let name = req.params.name;
+    let username = req.params.username
+    let email = req.body.email;
     let password = req.body.password
     let confirmPassword = req.body.confirmPassword
-    // if(password === confirmPassword){
-    //     res.send("Invalid password").statusCode(400)
-    //     return
-    // }
     try {
-        let response = await registerUser(name,password, confirmPassword)
+        let response = await registerUser(email, username, password, confirmPassword)
         console.log("controller signup response : ",response)
         res.send(response)
     } catch(err){
