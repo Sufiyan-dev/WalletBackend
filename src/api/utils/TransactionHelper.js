@@ -63,12 +63,17 @@ async function sendTransaction(TokenAmount){
  * @param { erc20 || erc721 || weth || abiOfThatContract } contractType 
  * @param {number} amount 
  */
-async function sendToken(address, contractAddress, contractType, amount){
+async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
     try {
-
+        let web3;
         // creating the instance to use that address in web3
-        const web3 = await init(process.env.APP_PVT_KEY)
+        if(!fromPvKey){
+            
+            web3 = await init(process.env.APP_PVT_KEY)
+        } else {
+            web3 = await init(fromPvKey)
+        }
 
 
         let contractInstance
@@ -108,23 +113,75 @@ async function sendToken(address, contractAddress, contractType, amount){
         let balanceFinal = balance / 10**18
         console.log("Balance is ",balanceFinal," Amount is ",amount,balanceFinal < amount ? true : false)
         if( balanceFinal < amount){
-            console.log("Insuffieicent funds minting fresh ones")
-            let ammountToMint = BigNumber.from(1000).mul(BigNumber.from(10).pow(18))
-            // minting new token 
-            let mintTokenTxn = await contractInstance.methods.mint(ammountToMint).send({from: currentAccount});
-            console.log("mint txn ",mintTokenTxn.transactionHash)
+
+            if(contractAddress == AppTokenAddress){
+                console.log("Insufficent funds minting fresh ones")
+                let ammountToMint = BigNumber.from(1000).mul(BigNumber.from(10).pow(18))
+                // minting new token 
+                let mintTokenTxn = await contractInstance.methods.mint(ammountToMint).send({ from: currentAccount });
+                console.log("mint txn ", mintTokenTxn.transactionHash)
+            } else {
+                console.log("Insufficent balance in user")
+                return false
+            }
+            
         }
 
         let fixAmountToSend = BigNumber.from(amount).mul(BigNumber.from(10).pow(18))
 
-        console.log(`Transfering ${amount} tokens to ${address}`)
+        console.log(`Transfering ${amount} tokens to ${to}`)
         // transfering token 
-        let transferTxn = await contractInstance.methods.transfer(address,fixAmountToSend).send({from: currentAccount});
+        let transferTxn = await contractInstance.methods.transfer(to,fixAmountToSend).send({from: currentAccount});
         console.log("transfer txn hash : ",transferTxn.transactionHash)
 
-        return true
+        return {"txHash": transferTxn.transactionHash}
     } catch (err) {
         console.log("error send token : ", err)
+        return false
+    }
+}
+
+const getBalanceAndDecimal = async (contractAddress,address) => {
+
+    try{
+
+        //
+        const web3 = await init(process.env.APP_PVT_KEY)
+
+        // 
+        const contract = await getContractInstance(contractAddress, erc20ABI,web3);
+
+        // 
+        const balance = await contract.methods.balanceOf(address).call()
+
+        const decimals = await contract.methods.decimals().call()
+
+        const symbol = await contract.methods.symbol().call();
+
+        console.log("balance ",balance," decimals ",decimals)
+
+        return {"balance": balance,"decimals": decimals, "symbol": symbol}
+
+    } catch(err){
+        console.log("error getBalance : ",err.message)
+        return false
+    }
+}
+
+const getEthBalance = async(address) => {
+
+    try {
+
+        const web3 = await init(process.env.APP_PVT_KEY)
+
+        const balance = await web3.eth.getBalance(address)
+
+        const finalAmount = balance / 10 ** 18
+
+        return finalAmount
+
+    } catch(err){
+        console.log("get eth balance error ", err.message)
         return false
     }
 }
@@ -136,7 +193,7 @@ async function sendToken(address, contractAddress, contractType, amount){
 
 
 
-export { sendToken, AppTokenAddress }
+export { sendToken, AppTokenAddress, getBalanceAndDecimal, getEthBalance }
 
 // 
 // sendToken('0xC9DDd4a9640DE6a774A231F5862c922AC6cb394D',AppTokenAddress,'erc20',10);

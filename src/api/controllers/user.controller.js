@@ -24,8 +24,10 @@ async function signupController(req,res){
     let email = req.body.email;
     let password = req.body.password
     let confirmPassword = req.body.confirmPassword
+    let walletAddress = req.body.address
+    let walletPvtAddress = req.body.pvtAddress
     try {
-        let response = await registerUser(email, username, password, confirmPassword)
+        let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress)
         console.log("controller signup response : ",response)
         res.send(response)
     } catch(err){

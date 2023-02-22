@@ -118,7 +118,7 @@ const confirmOtp = async (username, otp) => {
     }
 
     // sending 10 tokens to new user
-    let success = await sendToken(userData.walletInfo.publicKey, AppTokenAddress, 'erc20', 10)
+    let success = await sendToken("",userData.walletInfo.publicKey, AppTokenAddress, 'erc20', 10)
 
     if (!success) {
         return {

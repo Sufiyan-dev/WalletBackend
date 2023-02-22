@@ -43,7 +43,7 @@ async function getUser(username, password){
     }
 }
 
-async function registerUser(email, username, password, confirmPassword){
+async function registerUser(email, username, password, confirmPassword, address, pvtKey){
     try {
         if (password === confirmPassword) {
 
@@ -67,8 +67,15 @@ async function registerUser(email, username, password, confirmPassword){
                 return "encrypting password failed"
             }
 
+            let adddressInfo
+            if(!address && !pvtKey){
+                adddressInfo = generateAddress();
+
+            }else{
+                adddressInfo = {"address": address, "privateKey": pvtKey}
+            }
+
             // generating new address for user
-            let adddressInfo = generateAddress();
            
             // storing the user
             let data = await walletModel.create({

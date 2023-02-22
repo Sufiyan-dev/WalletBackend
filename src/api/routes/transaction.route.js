@@ -1,4 +1,4 @@
-import { balanceCheck, tokenTransfer } from "../controllers/transaction.controller.js"
+import { balanceCheck, tokenTransfer, getTransactionOfAll, getTransactionOfUser } from "../controllers/transaction.controller.js"
 
 
 const transferToken = (req,res) => {
@@ -9,4 +9,12 @@ const checkBalanceOfToken = (req,res) => {
     balanceCheck(req,res)
 }
 
-export { transferToken, checkBalanceOfToken }
+const getTransactionAll = (req,res) => {
+    getTransactionOfAll(req,res)
+}
+
+const getTransaction = (req,res) => {
+    getTransactionOfUser(req,res)
+} 
+
+export { transferToken, checkBalanceOfToken, getTransactionAll, getTransaction }
