@@ -2,6 +2,7 @@ import db from "../../config/db.config.js"
 import walletModel from "../models/wallet.model.js"
 import { generateAddress } from "../utils/createAddress.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
+import { jwtGenerate } from "../utils/jwtToken.js"
 
 async function getUser(username, password){
     try{
@@ -32,9 +33,17 @@ async function getUser(username, password){
             }
         }
 
+        const obj = {
+            "username": userInfo.username,
+            "email": userInfo.email,
+            "verified": userInfo.verified
+        }
+
+        const token = jwtGenerate(obj)
+
         return {
             status: "Success",
-            message: userInfo
+            message: { user: userInfo, token: token}
         }
 
     } catch(err){

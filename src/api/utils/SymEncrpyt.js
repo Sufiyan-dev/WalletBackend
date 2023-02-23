@@ -1,6 +1,5 @@
 
-import Buffer from 'buffer'
-import {Blob} from 'buffer';
+import Buffer from 'buffer';
 
 const blob = new Blob(['hello world']);
 console.log(blob); // 👉️ Blob { size: 11, type: '' }

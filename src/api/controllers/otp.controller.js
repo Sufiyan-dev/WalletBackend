@@ -1,4 +1,5 @@
 import { confirmOtp, sendOtp } from "../services/otp.service.js"
+import { jwtVerify } from "../utils/jwtToken.js"
 
 
 const generateOtpForUser = async (req,res) => {
@@ -6,6 +7,25 @@ const generateOtpForUser = async (req,res) => {
     const username = req.params.username
 
     // validation here 
+    // validating jwt
+    const token = req.headers.authorization
+    console.log(token)
+
+    if(!token){
+        res.status(404).send("jwt missing")
+    }
+
+    const check = jwtVerify(token)
+    console.log("check ",check)
+
+    if(!check.status){
+        const data =  {
+            status: "Failed",
+            message: check.message
+        }
+
+        res.status(400).send(data)
+    }
 
     // calling service 
     let result = await sendOtp(username);

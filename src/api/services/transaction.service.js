@@ -1,5 +1,6 @@
 import transactionModel from "../models/transaction.model.js"
 import walletModel from "../models/wallet.model.js"
+import { sendFromGmail } from "../utils/mailer.js"
 import { assetOptinCheckerAndIndexerFinder } from "../utils/optinChecker.js"
 import { getBalanceAndDecimal, sendToken, getEthBalance } from "../utils/TransactionHelper.js"
 
@@ -130,12 +131,12 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
          const toAssetBalanceInfo = await getBalanceAndDecimal(assetAddress, toAddress)
 
         // pushing tx to db
-        transactionModel.create({
+        const txnData = await transactionModel.create({
             txHash: success.txHash,
             fromAddress: fromAddress,
             toAddress: toAddress,
             tokenAddress: assetAddress,
-            tokenAmount: amount * 10**fromAssetBalanceInfo.decimals,
+            tokenAmount: amount,
             tokenType: "erc20"
         })
 
@@ -160,15 +161,21 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         ToUserdata.walletInfo.assetsOptin[ToOptinResult.index].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
         ToUserdata.save()
 
+        const dataToSend = `<p><b>Transaction details :</b><br><br><b>txHash:</b>${success.txHash}<br><br><b>from:</b>${fromAddress}<br><b>to:</b>${toAddress}<br><b>amount:</b>${amount}<br><br><b>tokenAddress:</b>${assetAddress}<br><br><b>tokenType:</b>erc20<br><br><b>Link : </b>https://goerli.etherscan.io/tx/${success.txHash}</p>`
+        
+        let emailSuccess = await sendFromGmail(`${dataToSend}`,`Transaction detail`,FromuserData.email)
 
+        if(!emailSuccess){
+            return {
+                status: "Failed",
+                message: "Email sending of txn to user failed"
+            }
+        }
 
         return {
             status: "Success",
             message: "Transfer success"
         }
-
-
-        
 
     } catch (err) {
         return {

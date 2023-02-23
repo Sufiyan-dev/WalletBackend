@@ -9,7 +9,7 @@ dotenv.config()
  * @param {number} otp 
  * @param {string} to 
  */
-async function sendFromGmail(otp, to) {
+async function sendFromGmail(data, topic, to) {
 
     // let mailTransporter = nodemailer.createTransport({
     //     service: 'smtps.xfinite.io',
@@ -37,8 +37,8 @@ async function sendFromGmail(otp, to) {
     let mailDetails = {
         from: 'sufiyan.memon@xfinite.io',
         to: to,
-        subject: 'OTP for verifing',
-        html: `<p>OTP is <b>${otp}</b>. It is valid for 1 hour </p>`
+        subject: `${topic}`,
+        html: `${data}`
     };
 
     // mailTransporter.sendMail(mailDetails, function (err, data) {

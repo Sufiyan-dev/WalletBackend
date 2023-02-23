@@ -4,10 +4,16 @@ import dotenv from 'dotenv'
 import { signin, signup } from './src/api/routes/user.route.js'
 import { confirmOtp, generateOtp } from './src/api/routes/otp.route.js';
 import { checkBalanceOfToken, transferToken, getTransaction, getTransactionAll } from './src/api/routes/transaction.route.js';
+import verifyUser from './src/api/middlewares/jwt.middleware.js';
 dotenv.config()
 
 const app = express();
+
+// req input phraser
 app.use(express.json())
+
+// jwt session checker
+// app.use(verifyUser)
 
 app.get('/',(req,res) => {
     res.send("Hey")

@@ -3,11 +3,13 @@ import OtpModel from "../models/otp.model.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
 import { sendFromGmail, sendMail } from "../utils/mailer.js"
 import { AppTokenAddress, sendToken } from "../utils/TransactionHelper.js"
+import { jwtVerify } from "../utils/jwtToken.js"
 
 
 const sendOtp = async (username) => {
 
     try {
+
         // get details of user from db
         let userData = await walletModel.findOne({ username: username })
 
@@ -46,7 +48,7 @@ const sendOtp = async (username) => {
             expiredAt: Date.now() + 3600000  // 1 hour of time to expire
         })
 
-        let sended = await sendFromGmail(OTP,mail);
+        let sended = await sendFromGmail(`<p>OTP is <b>${OTP}</b>. It is valid for 1 hour </p>`,`OTP for verifing`,mail);
 
         if(sended){
             return {
