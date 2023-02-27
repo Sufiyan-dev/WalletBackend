@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json())
 
 // jwt session checker
-// app.use(verifyUser)
+app.use(verifyUser)
 
 app.get('/',(req,res) => {
     res.send("Hey")

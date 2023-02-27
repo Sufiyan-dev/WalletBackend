@@ -8,27 +8,27 @@ const generateOtpForUser = async (req,res) => {
 
     // validation here 
     // validating jwt
-    const token = req.headers.authorization
+    const token = req.jwtToken
     console.log(token)
 
-    if(!token){
-        res.status(404).send("jwt missing")
-    }
+    // if(!token){
+    //     res.status(404).send("jwt missing")
+    // }
 
-    const check = jwtVerify(token)
-    console.log("check ",check)
+    // const check = jwtVerify(token)
+    // console.log("check ",check)
 
-    if(!check.status){
-        const data =  {
-            status: "Failed",
-            message: check.message
-        }
+    // if(!check.status){
+    //     const data =  {
+    //         status: "Failed",
+    //         message: check.message
+    //     }
 
-        res.status(400).send(data)
-    }
+    //     res.status(400).send(data)
+    // }
 
     // calling service 
-    let result = await sendOtp(username);
+    let result = await sendOtp(username, token);
 
     // sending the result back
     res.send(result);

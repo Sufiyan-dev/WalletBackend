@@ -6,22 +6,24 @@ import { AppTokenAddress, sendToken } from "../utils/TransactionHelper.js"
 import { jwtVerify } from "../utils/jwtToken.js"
 
 
-const sendOtp = async (username) => {
+const sendOtp = async (username, jwtTokenData) => {
 
     try {
 
+        console.log("toke info", jwtTokenData)
+
         // get details of user from db
-        let userData = await walletModel.findOne({ username: username })
+        // let userData = await walletModel.findOne({ username: username })
 
         // if not a valid user
-        if (!userData) {
-            return {
-                status: "Failed",
-                message: "Invalid username",
-            }
-        }
+        // if (!userData) {
+        //     return {
+        //         status: "Failed",
+        //         message: "Invalid username",
+        //     }
+        // }
 
-        if(userData.verified){
+        if(/*userData.verified*/ jwtTokenData.verified){
             return {
                 status: "failed",
                 message: "User already verfied"
