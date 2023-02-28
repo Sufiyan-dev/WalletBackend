@@ -9,7 +9,6 @@ import { getBalanceAndDecimal, sendToken, getEthBalance } from "../utils/Transac
 const transferERC20 = async (from ,assetAddress, amount, to) => {
 
     try {
-
         // first checking if from exist
         let FromuserData = await walletModel.findOne({ username: from })
         if (!FromuserData) {

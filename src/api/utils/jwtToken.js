@@ -6,7 +6,7 @@ dotenv.config()
 const jsonSecret = process.env.JWT_SECRET_KEY
 
 const jwtGenerate = (data) => {
-    const token = JWT.sign(data,jsonSecret,{expiresIn: 100})
+    const token = JWT.sign(data,jsonSecret,{expiresIn: 300}) // 5 mins
 
     console.log("token ", token)
 

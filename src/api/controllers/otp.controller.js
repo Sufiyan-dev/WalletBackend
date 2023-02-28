@@ -36,14 +36,16 @@ const generateOtpForUser = async (req,res) => {
 
 const verifyOtpOfUser = async (req,res) => {
     // getting the data
-    const username = req.params.username
+    // const username = req.params.username
+    const token = req.jwtToken
+
     console.log("bodyr",req.body)
     const otp = req.body.otp
 
     // validation here
 
     // calling the service
-    const result = await confirmOtp(username,otp);
+    const result = await confirmOtp(token,otp);
 
     // sending the resposne back
     res.send(result)

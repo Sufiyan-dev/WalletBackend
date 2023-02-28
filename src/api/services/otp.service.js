@@ -40,7 +40,7 @@ const sendOtp = async (username, jwtTokenData) => {
         console.log("otp hash ",otpHash);
 
         // 
-        let mail = userData.email;
+        let mail = jwtTokenData.email;
 
         // storing data in db
         OtpModel.create({
@@ -73,7 +73,9 @@ const sendOtp = async (username, jwtTokenData) => {
     }
 }
 
-const confirmOtp = async (username, otp) => {
+const confirmOtp = async (jwtTokenData, otp) => {
+    const username = jwtTokenData.username
+    const email = jwtTokenData.email
     // getting the user datails
     let userData = await walletModel.findOne({ username: username })
 
@@ -86,7 +88,7 @@ const confirmOtp = async (username, otp) => {
     }
 
     // gettign the otp details of that user
-    let otpDetailsArray = await OtpModel.find({email: userData.email})
+    let otpDetailsArray = await OtpModel.find({email: email})
     // console.log("user details ",otpDetails)
     if(otpDetailsArray.length == 0){
         return {
