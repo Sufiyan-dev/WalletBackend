@@ -73,7 +73,7 @@ const sendOtp = async (username, jwtTokenData) => {
     }
 }
 
-const confirmOtp = async (jwtTokenData, otp) => {
+const confirmOtp = async (user, jwtTokenData, otp) => {
     const username = jwtTokenData.username
     const email = jwtTokenData.email
     // getting the user datails

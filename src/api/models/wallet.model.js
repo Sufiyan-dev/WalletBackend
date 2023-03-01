@@ -6,6 +6,7 @@ const walletSchema = new mongoose.Schema({
     email:String,
     password:String,
     verified:Boolean,
+    isAdmin: Boolean,
     walletInfo: {
         publicKey: String,
         privateKey: String,

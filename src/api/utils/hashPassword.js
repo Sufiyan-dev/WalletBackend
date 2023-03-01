@@ -34,7 +34,7 @@ const checkPassword = async (password, passHash) => {
 }
 
 
-// const password = "mypass123"
+// const password = "123"
 // const hash = "$2a$10$Zb5GmlgLZHaRV1FebcDhjOvVI4DjN35NIt0nxfmP.mHe0SLHqMmba"
 // generateHashFromPassword(password)
 // checkPassword(password,hash).then((resut) => {

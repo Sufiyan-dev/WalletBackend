@@ -1,11 +1,9 @@
+import express from 'express';
+const router = express.Router();
+
 import { signinControl, signupController } from "../controllers/user.controller.js";
 
-const signin = (req,res) => {
-    signinControl(req,res)
-}
+router.post('/signin/:username',signinControl)
+router.post('/signup/:username',signupController)
 
-const signup = (req,res) => {
-    signupController(req,res)
-}
-
-export { signin, signup }
+export default router

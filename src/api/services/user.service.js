@@ -1,8 +1,12 @@
+import dotenv from 'dotenv'
 import db from "../../config/db.config.js"
 import walletModel from "../models/wallet.model.js"
 import { generateAddress } from "../utils/createAddress.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
 import { jwtGenerate } from "../utils/jwtToken.js"
+import { encrypt } from '../utils/SymEncrpyt.js'
+
+dotenv.config()
 
 async function getUser(username, password){
     try{
@@ -36,7 +40,8 @@ async function getUser(username, password){
         const obj = {
             "username": userInfo.username,
             "email": userInfo.email,
-            "verified": userInfo.verified
+            "verified": userInfo.verified,
+            "isAdmin": userInfo.isAdmin
         }
 
         const token = jwtGenerate(obj)
@@ -52,14 +57,24 @@ async function getUser(username, password){
     }
 }
 
-async function registerUser(email, username, password, confirmPassword, address, pvtKey){
+async function registerUser(email, username, password, confirmPassword, address, pvtKey, adminPass){
+    let  adminAccess = false
     try {
         if (password === confirmPassword) {
+
+            if(adminPass){ // checking if admin exist
+                if(adminPass != process.env.ADMIN_PASS){ // cheking valid admin pass
+                    return {status: "Failed", message: "Invalid admin password"}
+                }else {
+                    adminAccess = true
+                }
+            }
 
             // checking if mail already exist 
             let isEmailExist = await walletModel.exists({email: email})
             let isUsernameExist = await walletModel.exists({username:username})
             console.log(isEmailExist,isUsernameExist)
+
             // validation
             if(isEmailExist || isUsernameExist){
                 return {
@@ -73,7 +88,7 @@ async function registerUser(email, username, password, confirmPassword, address,
 
             // checking if any error
             if (!hash) {
-                return "encrypting password failed"
+                return {status: "Failed", message: "encrypting password failed"}
             }
 
             let adddressInfo
@@ -84,6 +99,8 @@ async function registerUser(email, username, password, confirmPassword, address,
                 adddressInfo = {"address": address, "privateKey": pvtKey}
             }
 
+            const encryptedData = encrypt(adddressInfo.address,adddressInfo.privateKey)
+
             // generating new address for user
            
             // storing the user
@@ -92,9 +109,10 @@ async function registerUser(email, username, password, confirmPassword, address,
                 password: hash,
                 username: username,
                 verified: false,
+                isAdmin: adminAccess,
                 walletInfo: {
                     publicKey: adddressInfo.address,
-                    privateKey: adddressInfo.privateKey,
+                    privateKey: encryptedData,
                 }    
             })
 
@@ -112,7 +130,7 @@ async function registerUser(email, username, password, confirmPassword, address,
     } catch (err) {
         // console.log("error register user ", err)
         return {
-            status: "Failed",
+            status: "Failed catch",
             message: err.message
         }
     }

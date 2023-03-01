@@ -24,7 +24,8 @@ async function sendFromGmail(data, topic, to) {
 
     // NOTE: NEED TO ON LESS SECURE APP
     const transport = nodemailer.createTransport(smtpTransport({
-        service: "Gmail",
+        service: "gmail",
+        host: "smtp.gmail.com",
         auth: {
             user: process.env.mail,
             pass: process.env.password

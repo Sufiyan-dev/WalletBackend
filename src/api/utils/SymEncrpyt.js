@@ -1,30 +1,49 @@
+import crypto from 'crypto';
+import buffer from 'buffer';
 
-import Buffer from 'buffer';
+const Buffer = buffer.Buffer
+const algorithm = 'aes256';
+const inputEncoding = 'utf8';
+const outputEncoding = 'hex';
+const ivlength = 16  // AES blocksize
 
-const blob = new Blob(['hello world']);
-console.log(blob); // 👉️ Blob { size: 11, type: '' }
+
+const encrypt = (secret, text) => {
+  // key must be 32 bytes for aes256
+  const key = crypto.createHash('sha256').update(String(secret)).digest('base64').substr(0,32); 
+  const iv = crypto.randomBytes(ivlength);
+
+  console.log("Encrypting : ",text);
+
+  let cipher = crypto.createCipheriv(algorithm, key, iv);
+  let ciphered = cipher.update(text, inputEncoding, outputEncoding);
+  ciphered += cipher.final(outputEncoding);
+  let ciphertext = iv.toString(outputEncoding) + ':' + ciphered
+
+  console.log(`Result in ${outputEncoding} is ${ciphertext}`);
+
+  return ciphertext;
+}
+
+const decrypt = (encryptedData, secret) => {
+  const key = crypto.createHash('sha256').update(String(secret)).digest('base64').substr(0,32);
+
+  let components = encryptedData.split(':');
+  const iv_from_ciphertext = Buffer.from(components.shift(), outputEncoding);
+  let decipher = crypto.createDecipheriv(algorithm, key, iv_from_ciphertext);
+  let deciphered = decipher.update(components.join(':'), outputEncoding, inputEncoding);
+  deciphered += decipher.final(inputEncoding);
+
+  console.log("Decrypted data : ",deciphered)
+
+  return deciphered
+}
+
+// TEST //
+// const data = '8380ff55e0655d9f6fba4d88d010fdb3b7e1b363463f5149474cd98b9b912887'
+// const encryptedData = encrypt('0xC9DDd4a9640DE6a774A231F5862c922AC6cb394D',data);
+// const decreptedData = decrypt(encryptedData,'0xC9DDd4a9640DE6a774A231F5862c922AC6cb394D');
+// data === decreptedData ? console.log(true): console.log(false)
 
 
-
-// Buffer.
-const buffer = Buffer.Buffer
-
-let string = "hello this is password ";
-
-let data = Array.from(buffer.from(string,'utf-8')) 
-
-console.log("Data ",data)
-
-function toHexString(byteArray) {
-    return Array.from(byteArray, function(byte) {
-      return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-    }).join('')
-  }
-
-  let result = toHexString(data)
-  console.log("result ",result)
-
-  const byteSize = str => new Blob([str]).size;
-
-  const result2 = byteSize("Hello World") // output: 11
-  console.log("result 2",result2)
+export { encrypt, decrypt}

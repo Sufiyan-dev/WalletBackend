@@ -2,10 +2,18 @@ import transactionModel from "../models/transaction.model.js"
 import walletModel from "../models/wallet.model.js"
 import { sendFromGmail } from "../utils/mailer.js"
 import { assetOptinCheckerAndIndexerFinder } from "../utils/optinChecker.js"
+import { decrypt } from "../utils/SymEncrpyt.js"
 import { getBalanceAndDecimal, sendToken, getEthBalance } from "../utils/TransactionHelper.js"
 
 
-
+/**
+ * 
+ * @param {*} from username
+ * @param {*} assetAddress 
+ * @param {*} amount 
+ * @param {*} to username
+ * @returns 
+ */
 const transferERC20 = async (from ,assetAddress, amount, to) => {
 
     try {
@@ -66,7 +74,8 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         // checking if asset exist in assetoptin
         const fromHasOptin = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
         const toHasOptin = assetOptinCheckerAndIndexerFinder(ToUserdata.walletInfo.assetsOptin,assetAddress)
-
+        console.log(fromHasOptin)
+        console.log(toHasOptin)
         // getting balance 
         const fromAssetBalanceInfo = await getBalanceAndDecimal(assetAddress, fromAddress)
         const fromAssetBalance = fromAssetBalanceInfo.balance / 10**fromAssetBalanceInfo.decimals
@@ -104,19 +113,19 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
                 console.log("Optin asset to")
                 // pushing data in db
                 ToUserdata.walletInfo.assetsOptin.push(obj)
-                FromuserData.save()
-
+                ToUserdata.save()
                 // saving the index of that asset
-                indexAssetTo = FromuserData.walletInfo.assetsOptin.length - 1
+                indexAssetTo = ToUserdata.walletInfo.assetsOptin.length - 1
             }
 
             // console.log("asset optin obj", obj)
         }
 
 
+        const decryptPvtKey = decrypt(FromuserData.walletInfo.privateKey,FromuserData.walletInfo.publicKey)
 
 
-        const success =  await sendToken(FromuserData.walletInfo.privateKey,toAddress,assetAddress,"erc20",amount)
+        const success =  await sendToken(decryptPvtKey,toAddress,assetAddress,"erc20",amount)
 
         if(!success){
             return {
@@ -139,25 +148,27 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
             tokenType: "erc20"
         })
 
-        if(indexAssetFrom){
-            // updating the balances in asset
-            FromuserData.walletInfo.assetsOptin[indexAssetFrom].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
-            FromuserData.save()
-        }
+        // if(indexAssetFrom){
+        //     console.log("From asset data ",FromuserData.walletInfo.assetsOptin[indexAssetFrom])
+        //     // updating the balances in asset
+        //     FromuserData.walletInfo.assetsOptin[indexAssetFrom].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
+        //     FromuserData.save()
+        // }
 
-        if(indexAssetTo){
-            // updating the balances in asset
-            ToUserdata.walletInfo.assetsOptin[indexAssetFrom].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
-            ToUserdata.save()
-        }
+        // if(indexAssetTo){
+        //     console.log("to asset data ",ToUserdata.walletInfo.assetsOptin[indexAssetTo])
+        //     // updating the balances in asset
+        //     ToUserdata.walletInfo.assetsOptin[indexAssetTo].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
+        //     ToUserdata.save()
+        // }
 
-        const FromOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
-        const ToOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
+        // const FromOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
+        // const ToOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
 
-        FromuserData.walletInfo.assetsOptin[FromOptinResult.index].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
+        FromuserData.walletInfo.assetsOptin[indexAssetFrom].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
         FromuserData.save()
 
-        ToUserdata.walletInfo.assetsOptin[ToOptinResult.index].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
+        ToUserdata.walletInfo.assetsOptin[indexAssetTo].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
         ToUserdata.save()
 
         const dataToSend = `<p><b>Transaction details :</b><br><br><b>txHash:</b>${success.txHash}<br><br><b>from:</b>${fromAddress}<br><b>to:</b>${toAddress}<br><b>amount:</b>${amount}<br><br><b>tokenAddress:</b>${assetAddress}<br><br><b>tokenType:</b>erc20<br><br><b>Link : </b>https://goerli.etherscan.io/tx/${success.txHash}</p>`
@@ -177,6 +188,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         }
 
     } catch (err) {
+        console.log(err)
         return {
             status: "Failed",
             message: err.message
@@ -204,13 +216,21 @@ const checkBalanceOfUser = async (address,assetAddress) => {
     }
 }
 
-const getTransactionOfSpecificUser = async (username, noOfTxns) => {
+const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
+
     // first checking if from exist
     let exists = await walletModel.findOne({ username: username })
     if (!exists) {
         return {
             status: "Failed",
             message: "Invalid User"
+        }
+    }
+
+     // getting caller detials
+     if(jwtToken.username !== username){
+        return {
+            status: "Failed", message: "not an valid user, to get the data"
         }
     }
 
@@ -230,7 +250,15 @@ const getTransactionOfSpecificUser = async (username, noOfTxns) => {
     }
 }
 
-const getTransactionOfAllUser = async (noOfTxns) => {
+const getTransactionOfAllUser = async (noOfTxns, jwtToken) => {
+
+    // check if user is admin or not
+    if(!jwtToken.isAdmin){
+        return {
+            status: "Failed",
+            message: "Invalid user, not an admin"
+        }
+    }
 
     const Txns = await transactionModel.find().limit(noOfTxns)
 

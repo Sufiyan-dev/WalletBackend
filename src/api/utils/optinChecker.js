@@ -9,7 +9,7 @@ const assetOptinCheckerAndIndexerFinder = (assetOptinArray, addressToFind) => {
 
     const assetExist = data[0]
 
-    return assetExist
+    return assetExist ? assetExist : {"hasFound": false, "index": ""}
 }
 
 export { assetOptinCheckerAndIndexerFinder }

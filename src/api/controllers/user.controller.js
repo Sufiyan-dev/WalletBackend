@@ -1,4 +1,5 @@
 import { getUser, registerUser } from "../services/user.service.js"
+import {validateNewUser, validateExistingUser} from "../validation/userValidation.js"
 
 
 async function signinControl(req, res){
@@ -9,6 +10,17 @@ async function signinControl(req, res){
 
    // getting password
    let password = req.body.password
+
+   const obj = {
+    username: username,
+    password: password
+   }
+
+   const result = validateExistingUser(obj)
+   if(result.status){
+    res.status(400).json({ status:"Failed" ,message: result.message})
+    return
+   }
    try {
        let response = await getUser(username, password)
        console.log("controller signin response received : ",response)
@@ -20,14 +32,28 @@ async function signinControl(req, res){
 }
 
 async function signupController(req,res){
-    let username = req.params.username
-    let email = req.body.email;
-    let password = req.body.password
-    let confirmPassword = req.body.confirmPassword
-    let walletAddress = req.body.address
-    let walletPvtAddress = req.body.pvtAddress
+    const username = req.params.username
+    const { email, password, confirmPassword, walletAddress, walletPvtAddress, adminPass} = req.body
+
+    const obj = {
+        username: username,
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+        walletAddress: walletAddress,
+        walletPvtAddress: walletPvtAddress
+    }
+
+    const result = validateNewUser(obj)
+    console.log(result)
+    if(result.status){
+        res.status(400).json({status:"Failed" , message: result.message })
+        return; 
+    }
+
+
     try {
-        let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress)
+        let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress, adminPass)
         console.log("controller signup response : ",response)
         res.send(response)
     } catch(err){

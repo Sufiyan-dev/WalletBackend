@@ -1,20 +1,15 @@
+import express from 'express';
+const router = express.Router()
+
 import { balanceCheck, tokenTransfer, getTransactionOfAll, getTransactionOfUser } from "../controllers/transaction.controller.js"
 
+router.post('/transfer/token/:username',tokenTransfer)
 
-const transferToken = (req,res) => {
-    tokenTransfer(req,res)
-}
+router.get("/check/balance/:address",balanceCheck)
 
-const checkBalanceOfToken = (req,res) => {
-    balanceCheck(req,res)
-}
+router.get("/transaction/all/:txnsNumber",getTransactionOfAll)
 
-const getTransactionAll = (req,res) => {
-    getTransactionOfAll(req,res)
-}
+router.get("/transaction/:user/:txnsNumber",getTransactionOfUser)
 
-const getTransaction = (req,res) => {
-    getTransactionOfUser(req,res)
-} 
 
-export { transferToken, checkBalanceOfToken, getTransactionAll, getTransaction }
+export default router

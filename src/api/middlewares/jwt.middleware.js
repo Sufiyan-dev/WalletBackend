@@ -12,7 +12,7 @@ const verifyUser = (req,res,next) => {
     const pathWithoutParams = req.path.split("/")[1]
     console.log(pathWithoutParams)
     
-    if(ignoreRoutes.includes(pathWithoutParams) || req.method == "GET"){
+    if(ignoreRoutes.includes(pathWithoutParams) /*|| req.method == "GET"*/){
         console.log("path included");
         next();
         return;
@@ -25,9 +25,9 @@ const verifyUser = (req,res,next) => {
 
     if(!data.status){
          if(data.message == 'jwt expired'){
-            res.sendStatus(440) // token expired
+            res.status(440).json({status: "Failed", message: "jwt token expired"}) // token expired
         } else {
-            res.sendStatus(498) // invalid token
+            res.status(498).json({status: "Failed", message: "invalid jwt token"}) // invalid token
         }
     }else {
         console.log("verified")

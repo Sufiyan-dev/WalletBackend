@@ -1,11 +1,10 @@
+import express from 'express';
+const router = express.Router();
+
 import { generateOtpForUser, verifyOtpOfUser } from "../controllers/otp.controller.js"
 
-const generateOtp = (req,res) => {
-    generateOtpForUser(req,res)
-}
+router.post('/otp/generate/:username',generateOtpForUser)
 
-const confirmOtp = (req,res) => {
-    verifyOtpOfUser(req,res)
-}
+router.post("/otp/confirm/:username",verifyOtpOfUser)
 
-export {generateOtp, confirmOtp}
+export default router
