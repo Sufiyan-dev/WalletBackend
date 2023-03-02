@@ -111,7 +111,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         // checking if balance is less than amount
         let balanceFinal = balance / 10**18
-        console.log("Balance is ",balanceFinal," Amount is ",amount,balanceFinal < amount ? true : false)
+        // console.log("Balance is ",balanceFinal," Amount is ",amount,balanceFinal < amount ? true : false)
         if( balanceFinal < amount){
 
             if(contractAddress == AppTokenAddress){
@@ -158,7 +158,7 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
 
         const symbol = await contract.methods.symbol().call();
 
-        console.log("balance ",balance," decimals ",decimals)
+        // console.log("balance ",balance," decimals ",decimals)
 
         return {"balance": balance,"decimals": decimals, "symbol": symbol}
 

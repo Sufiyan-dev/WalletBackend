@@ -1,15 +1,12 @@
-
-
-const assetOptinCheckerAndIndexerFinder = (assetOptinArray, addressToFind) => {
-    const data = assetOptinArray.map((asset,i) => {
-        if(asset.address === addressToFind){
-            return {"hasFound": true,"index": i}
+const assetOptinCheckerAndIndexerFinder = (assetOptinArray,addressToFind) => {
+    let message = {hasFound: false, index: ""}
+    for(let i in assetOptinArray){
+        if(assetOptinArray[i].address == addressToFind){
+            message = {hasFound: true, index: i}
+            return message
         }
-    })
-
-    const assetExist = data[0]
-
-    return assetExist ? assetExist : {"hasFound": false, "index": ""}
+    }
+    return message
 }
 
 export { assetOptinCheckerAndIndexerFinder }

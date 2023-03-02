@@ -15,7 +15,7 @@ import { getBalanceAndDecimal, sendToken, getEthBalance } from "../utils/Transac
  * @returns 
  */
 const transferERC20 = async (from ,assetAddress, amount, to) => {
-
+    assetAddress = assetAddress.toLowerCase()
     try {
         // first checking if from exist
         let FromuserData = await walletModel.findOne({ username: from })
@@ -26,6 +26,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
             }
         }
 
+        // checking if user is verified or not
         if(!FromuserData.verified){
             return {
                 status: "Failed",
@@ -36,6 +37,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
 
         let ToUserdata = await walletModel.findOne({ username: to })
         
+        // check if valid user 
         if(!ToUserdata){
             return {
                 status: "Failed",
@@ -45,14 +47,15 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
 
         
         
-        
+        // storing public address 
         const fromAddress = FromuserData.walletInfo.publicKey
         const toAddress = ToUserdata.walletInfo.publicKey
         
+        // getting eth balance of sender
         const fromEthBalance = await getEthBalance(fromAddress)
-
         console.log("balance",fromEthBalance)
 
+        // checking 
         if(!fromEthBalance && fromEthBalance !=0){
             return{
                 status: "Failed",
@@ -60,66 +63,97 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
             }
         }
 
+        // validating  balance
         if(fromEthBalance < 0.2){
             return {
                 status: "Failed",
                 message: "minimum 0.02 eth balance is require to do txn"
             }
         }
-
-
-
         console.log(`Address of FROM ${fromAddress} and TO ${toAddress}`)
 
-        // checking if asset exist in assetoptin
-        const fromHasOptin = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
-        const toHasOptin = assetOptinCheckerAndIndexerFinder(ToUserdata.walletInfo.assetsOptin,assetAddress)
-        console.log(fromHasOptin)
-        console.log(toHasOptin)
-        // getting balance 
+        
+        // console.log(fromHasOptin)
+        // console.log(toHasOptin)
+
+
+        // getting balance of FROM
         const fromAssetBalanceInfo = await getBalanceAndDecimal(assetAddress, fromAddress)
         const fromAssetBalance = fromAssetBalanceInfo.balance / 10**fromAssetBalanceInfo.decimals
 
+        // getting balance of TO
+        const toAssetBalanceInfo = await getBalanceAndDecimal(assetAddress, toAddress)
+        const toAssetBalance = toAssetBalanceInfo.balance / 10**toAssetBalanceInfo.decimals
+
+        // validating
         if(fromAssetBalance < amount){
             return {
                 status: "Failed",
                 message: "Insufficient asset funds to transfer"
             }
         }
-
-        console.log(`Asset balance of FROM is ${fromAssetBalance}`)
+        // console.log(`Asset balance of FROM is ${fromAssetBalance}`)
 
         let indexAssetFrom, indexAssetTo
-
-        if(!fromHasOptin.hasFound || !toHasOptin.hasFound){
-            // adding asset info to user
-            const obj = {
-                address: assetAddress,
-                assetType: "erc20",
-                lastBalance: fromAssetBalance
-            }
-
-            if(!fromHasOptin.hasFound){
+        // checking if asset exist in assetoptin
+        const fromHasOptin = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
+        const toHasOptin = assetOptinCheckerAndIndexerFinder(ToUserdata.walletInfo.assetsOptin,assetAddress)
+        console.log("from ", fromHasOptin)
+        console.log("to ", toHasOptin)
+            if (!fromHasOptin.hasFound) {
                 console.log("Optin asset from")
+
+                // adding asset info to user
+                const obj = {
+                    address: assetAddress,
+                    assetType: "erc20",
+                    lastBalance: fromAssetBalance - amount
+                }
+                console.log("length before push ",FromuserData.walletInfo.assetsOptin.length)
+                
                 // pushing data in db
                 FromuserData.walletInfo.assetsOptin.push(obj)
                 FromuserData.save()
 
+                console.log("length after push ",FromuserData.walletInfo.assetsOptin.length)
+
                 // saving the index of that asset
                 indexAssetFrom = FromuserData.walletInfo.assetsOptin.length - 1
+            } else { // exist
+                console.log("exist from asset")
+
+                console.log(" from Data of asset ",FromuserData.walletInfo.assetsOptin[fromHasOptin.index])
+
+                FromuserData.walletInfo.assetsOptin[fromHasOptin.index].lastBalance = fromAssetBalance - amount;
             }
 
             if(!toHasOptin.hasFound){
                 console.log("Optin asset to")
+
+                // adding asset info to user
+                const obj = {
+                    address: assetAddress,
+                    assetType: "erc20",
+                    lastBalance: toAssetBalance + amount
+                }
+
+                console.log("length before push ",ToUserdata.walletInfo.assetsOptin.length)
+
                 // pushing data in db
                 ToUserdata.walletInfo.assetsOptin.push(obj)
                 ToUserdata.save()
+
+                console.log("length after push ",ToUserdata.walletInfo.assetsOptin.length)
+
                 // saving the index of that asset
                 indexAssetTo = ToUserdata.walletInfo.assetsOptin.length - 1
-            }
+            }  else {
+                console.log("TO asset exist ")
 
-            // console.log("asset optin obj", obj)
-        }
+                console.log(" to data of asset",ToUserdata.walletInfo.assetsOptin[toHasOptin.index])
+
+                ToUserdata.walletInfo.assetsOptin[toHasOptin.index].lastBalance = toAssetBalance + amount
+            }
 
 
         const decryptPvtKey = decrypt(FromuserData.walletInfo.privateKey,FromuserData.walletInfo.publicKey)
@@ -134,9 +168,9 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
             }
         }
 
-         // getting balance 
-         const fromAssetBalanceInfoFinal = await getBalanceAndDecimal(assetAddress, fromAddress)
-         const toAssetBalanceInfo = await getBalanceAndDecimal(assetAddress, toAddress)
+        //  // getting balance 
+        //  const fromAssetBalanceInfoFinal = await getBalanceAndDecimal(assetAddress, fromAddress)
+        
 
         // pushing tx to db
         const txnData = await transactionModel.create({
@@ -165,11 +199,11 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         // const FromOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
         // const ToOptinResult = assetOptinCheckerAndIndexerFinder(FromuserData.walletInfo.assetsOptin,assetAddress)
 
-        FromuserData.walletInfo.assetsOptin[indexAssetFrom].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
-        FromuserData.save()
+        // FromuserData.walletInfo.assetsOptin[FromOptinResult.index].lastBalance = fromAssetBalanceInfoFinal.balance / 10 ** fromAssetBalanceInfoFinal.decimals
+        // FromuserData.save()
 
-        ToUserdata.walletInfo.assetsOptin[indexAssetTo].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
-        ToUserdata.save()
+        // ToUserdata.walletInfo.assetsOptin[ToOptinResult.index].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
+        // ToUserdata.save()
 
         const dataToSend = `<p><b>Transaction details :</b><br><br><b>txHash:</b>${success.txHash}<br><br><b>from:</b>${fromAddress}<br><b>to:</b>${toAddress}<br><b>amount:</b>${amount}<br><br><b>tokenAddress:</b>${assetAddress}<br><br><b>tokenType:</b>erc20<br><br><b>Link : </b>https://goerli.etherscan.io/tx/${success.txHash}</p>`
         
