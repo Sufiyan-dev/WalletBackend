@@ -22,7 +22,7 @@ const tokenTransfer = async (req,res) => {
     }
 
     const result = await transferERC20(user, contractAddress, amount, to)
-    res.send(result)
+    res.status(result.statuscode).json(result)
 }
 
 const balanceCheck = async (req,res) => {
@@ -43,7 +43,7 @@ const balanceCheck = async (req,res) => {
     }
 
     const result = await checkBalanceOfUser(address,contractAddress)
-    res.send(result)
+    res.status(result.statuscode).json(result)
 }
 
 const getTransactionOfUser = async (req,res) => {
@@ -65,7 +65,7 @@ const getTransactionOfUser = async (req,res) => {
     }
 
     const result = await getTransactionOfSpecificUser(username, noOfTxns, token)
-    res.send(result)
+    res.status(result.statuscode).json(result)
 }
 
 const getTransactionOfAll = async (req,res) => {
@@ -84,7 +84,7 @@ const getTransactionOfAll = async (req,res) => {
 
     const token = req.jwtToken
     const result = await getTransactionOfAllUser(noOfTxns, token)
-    res.send(result)
+    res.status(result.statuscode).json(result)
 }
 
 export { tokenTransfer, balanceCheck, getTransactionOfUser, getTransactionOfAll }

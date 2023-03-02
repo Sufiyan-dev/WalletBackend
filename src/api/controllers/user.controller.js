@@ -21,14 +21,9 @@ async function signinControl(req, res){
     res.status(400).json({ status:"Failed" ,message: result.message})
     return
    }
-   try {
        let response = await getUser(username, password)
        console.log("controller signin response received : ",response)
-       res.send(response)
-    //    return
-   } catch(err){
-    console.log("error signin ",err)
-   } 
+       res.status(response.statuscode).json(response) 
 }
 
 async function signupController(req,res){
@@ -45,20 +40,16 @@ async function signupController(req,res){
     }
 
     const result = validateNewUser(obj)
-    console.log(result)
+    // console.log(result)
     if(result.status){
         res.status(400).json({status:"Failed" , message: result.message })
         return; 
     }
 
 
-    try {
-        let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress, adminPass)
-        console.log("controller signup response : ",response)
-        res.send(response)
-    } catch(err){
-        console.log("error signup ",err)
-    }
+    let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress, adminPass)
+    // console.log("controller signup response : ",response)
+    res.status(response.statuscode).json(response)
 }
 
 export { signinControl, signupController }

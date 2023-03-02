@@ -19,6 +19,7 @@ async function getUser(username, password){
         if(!userInfo){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "invalid user"
             }
         }
@@ -33,6 +34,7 @@ async function getUser(username, password){
         if(!check){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "invalid password"
             }
         }
@@ -48,23 +50,28 @@ async function getUser(username, password){
 
         return {
             status: "Success",
+            statuscode: 201,
             message: { user: userInfo, token: token}
         }
 
     } catch(err){
         console.log("error hash ",err)
-        return err
+        return { 
+            status: "Failed error",
+            statuscode: 500,
+            message: err.message
+        }
     }
 }
 
 async function registerUser(email, username, password, confirmPassword, address, pvtKey, adminPass){
     let  adminAccess = false
     try {
-        if (password === confirmPassword) {
+        // if (password === confirmPassword) {
 
             if(adminPass){ // checking if admin exist
                 if(adminPass != process.env.ADMIN_PASS){ // cheking valid admin pass
-                    return {status: "Failed", message: "Invalid admin password"}
+                    return {status: "Failed",statuscode: 400, message: "Invalid admin password"}
                 }else {
                     adminAccess = true
                 }
@@ -79,6 +86,7 @@ async function registerUser(email, username, password, confirmPassword, address,
             if(isEmailExist || isUsernameExist){
                 return {
                     status: "Failed",
+                    statuscode: 400,
                     message: "User already exist"
                 }
             }
@@ -88,7 +96,7 @@ async function registerUser(email, username, password, confirmPassword, address,
 
             // checking if any error
             if (!hash) {
-                return {status: "Failed", message: "encrypting password failed"}
+                return {status: "Failed", statuscode: 500, message: "encrypting password failed"}
             }
 
             let adddressInfo
@@ -119,18 +127,21 @@ async function registerUser(email, username, password, confirmPassword, address,
             // returing the user info
             return {
                 status: "Success",
+                statuscode: 201,
                 message: data
             }
-        } else {
-            return {
-                status: "Failed",
-                message: "invalid password match"
-            }
-        }
+        // } else {
+        //     return {
+        //         status: "Failed",
+
+        //         message: "invalid password match"
+        //     }
+        // }
     } catch (err) {
         // console.log("error register user ", err)
         return {
             status: "Failed catch",
+            statuscode: 500,
             message: err.message
         }
     }

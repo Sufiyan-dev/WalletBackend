@@ -3,7 +3,6 @@ import OtpModel from "../models/otp.model.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
 import { sendFromGmail, sendMail } from "../utils/mailer.js"
 import { AppTokenAddress, sendToken } from "../utils/TransactionHelper.js"
-import { jwtVerify } from "../utils/jwtToken.js"
 
 
 const sendOtp = async (username, jwtTokenData) => {
@@ -26,6 +25,7 @@ const sendOtp = async (username, jwtTokenData) => {
         if(/*userData.verified*/ jwtTokenData.verified){
             return {
                 status: "failed",
+                statuscode: 400,
                 message: "User already verfied"
             }
         }
@@ -55,11 +55,13 @@ const sendOtp = async (username, jwtTokenData) => {
         if(sended){
             return {
                 status: "Success",
+                statuscode: 200,
                 message: `Mail sended success to ${mail}`
             }
         }else{
             return {
                 status: "Failed",
+                statuscode: 500,
                 message: "Mail send failed"
             }
         }
@@ -68,6 +70,7 @@ const sendOtp = async (username, jwtTokenData) => {
     } catch (err) {
         return {
             status: "Failed error",
+            statuscode: 500,
             message: err.message 
         }
     }
@@ -83,6 +86,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     if(!userData){
         return {
             status: "Failed",
+            statuscode: 400,
             message: "Invalid User"
         }
     }
@@ -93,7 +97,8 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     if(otpDetailsArray.length == 0){
         return {
             status: "Failed",
-            message: "No otp generated"
+            statuscode: 400,
+            message: "No otp generated yet"
         }
     }
 
@@ -104,6 +109,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     if(otpDetails.expiredAt < Date.now()){
         return {
             status: "Failed",
+            statuscode: 401,
             message: "OTP expired"
         }
     }
@@ -119,6 +125,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     if(!valid){
         return {
             status: "Failed",
+            statuscode: 400,
             message: "Invalid OTP"
         }
     }
@@ -129,6 +136,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     if (!success) {
         return {
             status: "Failed",
+            statuscode: 500,
             message: "Token sending error"
         }
     }
@@ -150,6 +158,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
     return {
         status: "Success",
+        statuscode: 201,
         message: userData
     }
 }

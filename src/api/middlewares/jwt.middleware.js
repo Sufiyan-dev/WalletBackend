@@ -4,7 +4,8 @@ const verifyUser = (req,res,next) => {
     
     const ignoreRoutes = [
         "signin",
-        "signup"
+        "signup",
+        "check"
     ]
     
     // console.log("PATH", req.method)

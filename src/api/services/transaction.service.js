@@ -22,6 +22,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if (!FromuserData) {
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "Invalid Sender"
             }
         }
@@ -30,6 +31,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(!FromuserData.verified){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "Sender must verified email first"
             }
         }
@@ -41,6 +43,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(!ToUserdata){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "To user does not exist"
             }
         }
@@ -59,6 +62,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(!fromEthBalance && fromEthBalance !=0){
             return{
                 status: "Failed",
+                statuscode: 500,
                 message: "get eth balance failed"
             }
         }
@@ -67,6 +71,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(fromEthBalance < 0.2){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "minimum 0.02 eth balance is require to do txn"
             }
         }
@@ -89,6 +94,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(fromAssetBalance < amount){
             return {
                 status: "Failed",
+                statuscode: 400,
                 message: "Insufficient asset funds to transfer"
             }
         }
@@ -164,6 +170,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(!success){
             return {
                 status: "Failed",
+                statuscode: 500,
                 message: "Transfering token falied"
             }
         }
@@ -212,12 +219,14 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         if(!emailSuccess){
             return {
                 status: "Failed",
+                statuscode: 500,
                 message: "Email sending of txn to user failed"
             }
         }
 
         return {
             status: "Success",
+            statuscode: 201,
             message: "Transfer success"
         }
 
@@ -225,6 +234,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         console.log(err)
         return {
             status: "Failed",
+            statuscode: 500,
             message: err.message
         }
     }
@@ -238,6 +248,7 @@ const checkBalanceOfUser = async (address,assetAddress) => {
     if(!balanceAndDecimalsOfUser){
         return {
             status: "Failed",
+            statuscode: 500,
             message: "Get balance failed"
         }
     }
@@ -246,6 +257,7 @@ const checkBalanceOfUser = async (address,assetAddress) => {
 
     return {
         status: "Success",
+        statuscode: 201,
         message: finalBalance
     }
 }
@@ -257,6 +269,7 @@ const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
     if (!exists) {
         return {
             status: "Failed",
+            statuscode: 400,
             message: "Invalid User"
         }
     }
@@ -264,7 +277,7 @@ const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
      // getting caller detials
      if(jwtToken.username !== username){
         return {
-            status: "Failed", message: "not an valid user, to get the data"
+            status: "Failed", statuscode: 400 ,message: "not an valid user, to get the data"
         }
     }
 
@@ -274,12 +287,14 @@ const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
     if(Txns.length == 0){
         return {
             status: "Success",
+            statuscode: 201,
             message: "No transaction from that user"
         }
     }
 
     return {
         status: "Success",
+        statuscode: 201,
         message: Txns
     }
 }
@@ -290,6 +305,7 @@ const getTransactionOfAllUser = async (noOfTxns, jwtToken) => {
     if(!jwtToken.isAdmin){
         return {
             status: "Failed",
+            statuscode: 400,
             message: "Invalid user, not an admin"
         }
     }
@@ -299,12 +315,14 @@ const getTransactionOfAllUser = async (noOfTxns, jwtToken) => {
     if(Txns.length == 0){
         return {
             status: "Success",
+            statuscode: 201,
             message: "No transaction"
         }
     }
 
     return {
         status: "Success",
+        statuscode: 201,
         message: Txns
     }
 

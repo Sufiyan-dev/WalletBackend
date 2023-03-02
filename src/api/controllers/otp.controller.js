@@ -24,7 +24,7 @@ const generateOtpForUser = async (req,res) => {
     let result = await sendOtp(username, token);
 
     // sending the result back
-    res.send(result);
+    res.status(result.statuscode).json(result);
 }
 
 const verifyOtpOfUser = async (req,res) => {
@@ -46,7 +46,7 @@ const verifyOtpOfUser = async (req,res) => {
     const result = await confirmOtp(username,token,otp);
 
     // sending the resposne back
-    res.send(result)
+    res.status(result.statuscode).json(result)
 }
 
 export { generateOtpForUser, verifyOtpOfUser}
