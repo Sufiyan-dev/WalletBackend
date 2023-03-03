@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema({
     txHash:String,
+    txStatus:String,
     fromAddress:String,
     toAddress:String,
     tokenAddress:String,

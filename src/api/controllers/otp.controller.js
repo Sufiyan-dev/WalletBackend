@@ -4,19 +4,23 @@ import { validateConfirmOtp, validateGenerateOtp } from "../validation/otpValida
 
 
 const generateOtpForUser = async (req,res) => {
+
+
+      // validating jwt
+      const token = req.jwtToken
+    //   console.log(token)
+
     // getting the username 
-    const username = req.params.username
+    const username = token.username
 
     // validation here 
     const resp = validateGenerateOtp({username: username})
     if(resp.status){
-        res.status(400).json({ status:"Failed" ,message: result.message})
+        res.status(400).json({ status:"Failed" ,message: resp.message})
         return
     }
 
-    // validating jwt
-    const token = req.jwtToken
-    console.log(token)
+  
 
 
 
@@ -28,11 +32,12 @@ const generateOtpForUser = async (req,res) => {
 }
 
 const verifyOtpOfUser = async (req,res) => {
-    // getting the data
-    const username = req.params.username
+    
+    
     const token = req.jwtToken
 
-    console.log("bodyr",req.body)
+    // getting the data
+    const username = token.username
     const otp = req.body.otp
 
      // validation here 

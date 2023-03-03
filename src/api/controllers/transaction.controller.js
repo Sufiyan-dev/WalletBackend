@@ -1,10 +1,9 @@
 import { transferERC20, checkBalanceOfUser, getTransactionOfSpecificUser, getTransactionOfAllUser } from "../services/transaction.service.js"
-import { validateGetTxnOfAll, validateGetTxnOfUser, validateTransferTokenTxn } from "../validation/txnValidation.js"
+import { validateGetTxnOfAll, validateGetTxnOfUser, validateTransferTokenTxn, validateBalanceCheck } from "../validation/txnValidation.js"
 
 
 const tokenTransfer = async (req,res) => {
-    const user = req.params.username
-    const { contractAddress, amount, to} = req.body
+    const { user, contractAddress, amount, to} = req.body
 
     // obj 
     const obj = {
@@ -26,8 +25,7 @@ const tokenTransfer = async (req,res) => {
 }
 
 const balanceCheck = async (req,res) => {
-    const address = req.params.address
-    const contractAddress = req.body.contractAddress
+    const { address, contractAddress} = req.body
 
     // obj
     const obj = {
@@ -35,7 +33,7 @@ const balanceCheck = async (req,res) => {
         contractAddress: contractAddress
     }
 
-    const resp = validateTransferTokenTxn(obj);
+    const resp = validateBalanceCheck(obj);
 
     if(resp.status){
         res.status(400).json({ status:"Failed" ,message: resp.message})
@@ -47,10 +45,15 @@ const balanceCheck = async (req,res) => {
 }
 
 const getTransactionOfUser = async (req,res) => {
-    const username = req.params.user
-    const noOfTxns = req.params.txnsNumber
-    const token = req.jwtToken
+    console.log("inside")
 
+    console.log(req.params)
+    
+    const noOfTxns = req.params.txns
+    const skipNoOfTxns = req.params.skip
+    const token = req.jwtToken
+    const username = token.username
+    console.log(noOfTxns,skipNoOfTxns)
 
     const obj = {
         username: username,
@@ -69,7 +72,9 @@ const getTransactionOfUser = async (req,res) => {
 }
 
 const getTransactionOfAll = async (req,res) => {
-    const noOfTxns = req.params.txnsNumber
+    const noOfTxns = req.params.txns
+    const skipNoOfTxns = req.params.skip
+    console.log(noOfTxns,skipNoOfTxns)
 
     const obj = {
         noOfTxns: noOfTxns
@@ -83,7 +88,7 @@ const getTransactionOfAll = async (req,res) => {
     }
 
     const token = req.jwtToken
-    const result = await getTransactionOfAllUser(noOfTxns, token)
+    const result = await getTransactionOfAllUser(noOfTxns, skipNoOfTxns, token)
     res.status(result.statuscode).json(result)
 }
 

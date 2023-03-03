@@ -1,8 +1,8 @@
-import Web3 from "web3";
-import HDWalletProvider from "@truffle/hdwallet-provider";
+import { ethers } from "ethers";
+
 import dotenv from 'dotenv'
 
-import { data as erc20ABI } from "./abi/erc20.js" ;
+// import { data as erc20ABI } from "./abi/erc20.js" ;
 import { BigNumber } from "@ethersproject/bignumber";
 
 dotenv.config()
@@ -10,44 +10,42 @@ dotenv.config()
 const AppTokenAddress = '0xd8E3f15A14164CCcc70efc24570b0Cd0b256cDe7';
 
 let currentAccount;
-// const pvKey = process.env.APP_PVT_KEY
 
-// const localKeyProvider = new HDWalletProvider({
-//     privateKeys: [pvKey],
-//     providerOrUrl: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMYKEYGOERLI}`,
-// });
-
-// const web3 = new Web3(localKeyProvider);
-
-// const myAccount = web3.eth.accounts.privateKeyToAccount(pvKey);
-// console.log("Using address ", myAccount.address)
-
-// const ContractInstance = new web3.eth.Contract(erc20ABI,AppTokenAddress);
-// let name = await ContractInstance.methods.name.call()
-// console.log(name)
+const erc20ABI = [
+    "function balanceOf(address account) external view returns (uint256)",
+    "function transfer(address to, uint256 amount) external returns (bool)",
+    "function mint(uint amount) external returns(bool)"
+]
 
 
-async function init(pvKey){
 
-    const localKeyProvider = new HDWalletProvider({
-        privateKeys: [pvKey],
-        providerOrUrl: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMYKEYGOERLI}`,
-    });
+/**
+ * 
+ * @param {string} pvKey of account
+ * @param {string} type 'read' or 'readwrite' type of instance needed
+ * @returns signer instance
+ */
+async function init(pvKey,type){
 
-    const web3 = new Web3(localKeyProvider);
+    let signer
+    const apiKey = `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMYKEYGOERLI}`
+    if(type == "read"){
+        signer = new ethers.JsonRpcProvider(apiKey);
+    } else {
+        signer =  new ethers.Wallet(pvKey, apiKey);
+    } 
 
-    const myAccount = web3.eth.accounts.privateKeyToAccount(pvKey);
     // updating 
-    currentAccount = myAccount.address
+    currentAccount = signer.address
 
-    console.log("Using address ", myAccount.address)
+    console.log("Using address ", currentAccount)
 
-    return web3
+    return signer
 }
 
-async function getContractInstance(address, abi, web3Instance){
-    let web3 = web3Instance
-    const ContractInstance = new web3.eth.Contract(abi,address)
+async function getContractInstance(address, abi, signer){
+    
+    const ContractInstance = new ethers.Contract(address, abi, signer);
 
     return ContractInstance
 }
@@ -66,15 +64,14 @@ async function sendTransaction(TokenAmount){
 async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
     try {
-        let web3;
+        let signer;
         // creating the instance to use that address in web3
         if(!fromPvKey){
             
-            web3 = await init(process.env.APP_PVT_KEY)
+            signer = await init(process.env.APP_PVT_KEY,"readwrite")
         } else {
-            web3 = await init(fromPvKey)
+            signer = await init(fromPvKey,"readwrite")
         }
-
 
         let contractInstance
 
@@ -82,7 +79,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
         if (contractType == 'erc20') { // if erc20 contract 
 
             // getting contract instance 
-            contractInstance = await getContractInstance(contractAddress, erc20ABI, web3)
+            contractInstance = await getContractInstance(contractAddress, erc20ABI, signer)
 
         } 
         // else if (contractType == 'erc721') { // if and nft contract
@@ -102,23 +99,22 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
         // }
 
         // getting the name of contract
-        let name = await contractInstance.methods.name().call()
+        let name = await contractInstance.name()
         console.log("name of contract ", name);
 
         // getting the balance of current user
-        let balance = await contractInstance.methods.balanceOf(currentAccount).call()
+        let balance = await contractInstance.balanceOf(currentAccount)
         console.log(`Balance of ${currentAccount} is ${balance / 10**18}`)
 
         // checking if balance is less than amount
         let balanceFinal = balance / 10**18
         // console.log("Balance is ",balanceFinal," Amount is ",amount,balanceFinal < amount ? true : false)
         if( balanceFinal < amount){
-
             if(contractAddress == AppTokenAddress){
                 console.log("Insufficent funds minting fresh ones")
                 let ammountToMint = BigNumber.from(1000).mul(BigNumber.from(10).pow(18))
                 // minting new token 
-                let mintTokenTxn = await contractInstance.methods.mint(ammountToMint).send({ from: currentAccount });
+                let mintTokenTxn = await contractInstance.mint(ammountToMint);
                 console.log("mint txn ", mintTokenTxn.transactionHash)
             } else {
                 console.log("Insufficent balance in user")
@@ -131,7 +127,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         console.log(`Transfering ${amount} tokens to ${to}`)
         // transfering token 
-        let transferTxn = await contractInstance.methods.transfer(to,fixAmountToSend).send({from: currentAccount});
+        let transferTxn = await contractInstance.transfer(to,fixAmountToSend);
         console.log("transfer txn hash : ",transferTxn.transactionHash)
 
         return {"txHash": transferTxn.transactionHash}
@@ -145,20 +141,13 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
 
     try{
 
-        //
-        const web3 = await init(process.env.APP_PVT_KEY)
+        const signer = await init(process.env.APP_PVT_KEY,"read")
 
-        // 
-        const contract = await getContractInstance(contractAddress, erc20ABI,web3);
+        const contract = await getContractInstance(contractAddress, erc20ABI, signer);
 
-        // 
-        const balance = await contract.methods.balanceOf(address).call()
-
-        const decimals = await contract.methods.decimals().call()
-
-        const symbol = await contract.methods.symbol().call();
-
-        // console.log("balance ",balance," decimals ",decimals)
+        const balance = await contract.balanceOf(address);
+        const decimals = await contract.decimals();
+        const symbol = await contract.symbol();
 
         return {"balance": balance,"decimals": decimals, "symbol": symbol}
 
@@ -171,11 +160,10 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
 const getEthBalance = async(address) => {
 
     try {
+        
+        const signer = await init(process.env.APP_PVT_KEY, "read")
 
-        const web3 = await init(process.env.APP_PVT_KEY)
-
-        const balance = await web3.eth.getBalance(address)
-
+        const balance = await signer.getBalance(address)
         const finalAmount = balance / 10 ** 18
 
         return finalAmount

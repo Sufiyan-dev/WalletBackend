@@ -68,7 +68,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         }
 
         // validating  balance
-        if(fromEthBalance < 0.2){
+        if(fromEthBalance < 0.02){
             return {
                 status: "Failed",
                 statuscode: 400,
@@ -262,7 +262,7 @@ const checkBalanceOfUser = async (address,assetAddress) => {
     }
 }
 
-const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
+const getTransactionOfSpecificUser = async (username, noOfTxns, skipNoOfTxns, jwtToken) => {
 
     // first checking if from exist
     let exists = await walletModel.findOne({ username: username })
@@ -281,14 +281,21 @@ const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
         }
     }
 
-    const Txns = await transactionModel.find({$or: [{fromAddress: exists.walletInfo.publicKey}, {toAddress: exists.walletInfo.publicKey}]}).limit(noOfTxns)
+    let Txns
+    if(skipNoOfTxns){
+        Txns = await transactionModel.find({$or: [{fromAddress: exists.walletInfo.publicKey}, {toAddress: exists.walletInfo.publicKey}]}).limit(noOfTxns).skip(skipNoOfTxns)
+    } else {
+        Txns = await transactionModel.find({$or: [{fromAddress: exists.walletInfo.publicKey}, {toAddress: exists.walletInfo.publicKey}]}).limit(noOfTxns)
+    }
+
+     
     console.log(Txns)
 
     if(Txns.length == 0){
         return {
             status: "Success",
             statuscode: 201,
-            message: "No transaction from that user"
+            message: "No transaction from that user or skip"
         }
     }
 
@@ -299,7 +306,7 @@ const getTransactionOfSpecificUser = async (username, noOfTxns, jwtToken) => {
     }
 }
 
-const getTransactionOfAllUser = async (noOfTxns, jwtToken) => {
+const getTransactionOfAllUser = async (noOfTxns, skipNoOfTxns, jwtToken) => {
 
     // check if user is admin or not
     if(!jwtToken.isAdmin){
@@ -310,13 +317,20 @@ const getTransactionOfAllUser = async (noOfTxns, jwtToken) => {
         }
     }
 
-    const Txns = await transactionModel.find().limit(noOfTxns)
+    let Txns
+    if(skipNoOfTxns){
+        Txns = await transactionModel.find().limit(noOfTxns).skip(skipNoOfTxns)
+    } else {
+        Txns = await transactionModel.find().limit(noOfTxns)
+    }
+
+     
 
     if(Txns.length == 0){
         return {
             status: "Success",
             statuscode: 201,
-            message: "No transaction"
+            message: "No transaction or skipped"
         }
     }
 

@@ -27,9 +27,8 @@ async function signinControl(req, res){
 }
 
 async function signupController(req,res){
-    const username = req.params.username
-    const { email, password, confirmPassword, walletAddress, walletPvtAddress, adminPass} = req.body
-
+    const { username, email, password, confirmPassword, walletAddress, walletPvtAddress, adminPass} = req.body
+    
     const obj = {
         username: username,
         email: email,
@@ -40,7 +39,7 @@ async function signupController(req,res){
     }
 
     const result = validateNewUser(obj)
-    // console.log(result)
+    console.log(result)
     if(result.status){
         res.status(400).json({status:"Failed" , message: result.message })
         return; 
