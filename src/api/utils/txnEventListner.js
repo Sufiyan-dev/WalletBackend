@@ -22,6 +22,7 @@ const signer = new ethers.Wallet(process.env.APP_PVT_KEY,`https://eth-goerli.alc
 //     AnkrProvider
 // }
 
+
 const balance = await provider.getBalance(signer.address)
 
 console.log(ethers.formatEther(balance))
