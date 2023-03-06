@@ -3,7 +3,11 @@ import { validateGetTxnOfAll, validateGetTxnOfUser, validateTransferTokenTxn, va
 
 
 const tokenTransfer = async (req,res) => {
-    const { user, contractAddress, amount, to} = req.body
+    const {contractAddress, amount, to} = req.body
+
+    const token = req.jwtToken
+
+    const user = token.username
 
     // obj 
     const obj = {

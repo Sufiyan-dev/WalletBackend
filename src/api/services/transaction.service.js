@@ -1,9 +1,12 @@
+import events from 'events';
+const eventEmitter = new events();
+
 import transactionModel from "../models/transaction.model.js"
 import walletModel from "../models/wallet.model.js"
 import { sendFromGmail } from "../utils/mailer.js"
 import { assetOptinCheckerAndIndexerFinder } from "../utils/optinChecker.js"
 import { decrypt } from "../utils/SymEncrpyt.js"
-import { getBalanceAndDecimal, sendToken, getEthBalance } from "../utils/TransactionHelper.js"
+import { getBalanceAndDecimal, sendToken, getEthBalance, waitForTxnToMint } from "../utils/TransactionHelper.js"
 
 
 /**
@@ -182,6 +185,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         // pushing tx to db
         const txnData = await transactionModel.create({
             txHash: success.txHash,
+            txStatus: "Pending",
             fromAddress: fromAddress,
             toAddress: toAddress,
             tokenAddress: assetAddress,
@@ -212,7 +216,7 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
         // ToUserdata.walletInfo.assetsOptin[ToOptinResult.index].lastBalance = toAssetBalanceInfo.balance / 10 ** toAssetBalanceInfo.decimals
         // ToUserdata.save()
 
-        const dataToSend = `<p><b>Transaction details :</b><br><br><b>txHash:</b>${success.txHash}<br><br><b>from:</b>${fromAddress}<br><b>to:</b>${toAddress}<br><b>amount:</b>${amount}<br><br><b>tokenAddress:</b>${assetAddress}<br><br><b>tokenType:</b>erc20<br><br><b>Link : </b>https://goerli.etherscan.io/tx/${success.txHash}</p>`
+        const dataToSend = `<p><b>Transaction details :</b><br><br><b>txHash:</b>${success.txHash}<br><br><b>Transaction status :</b> Pending <br><br><b>from:</b>${fromAddress}<br><b>to:</b>${toAddress}<br><b>amount:</b>${amount}<br><br><b>tokenAddress:</b>${assetAddress}<br><br><b>tokenType:</b>erc20<br><br><b>Link : </b>https://goerli.etherscan.io/tx/${success.txHash}</p>`
         
         let emailSuccess = await sendFromGmail(`${dataToSend}`,`Transaction detail`,FromuserData.email)
 
@@ -224,10 +228,14 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
             }
         }
 
+
+
+        eventEmitter.emit("newTxn", success.txHash, FromuserData.username);
+
         return {
             status: "Success",
             statuscode: 201,
-            message: "Transfer success"
+            message: "Transfer success",
         }
 
     } catch (err) {
@@ -244,7 +252,12 @@ const transferERC20 = async (from ,assetAddress, amount, to) => {
 const checkBalanceOfUser = async (address,assetAddress) => {
 
     const balanceAndDecimalsOfUser = await getBalanceAndDecimal(assetAddress,address)
-    console.log(`balance of ${address} at contract ${assetAddress} is ${balanceAndDecimalsOfUser.balance / 10**balanceAndDecimalsOfUser.decimals}`)
+
+    // const balance = BigNumber.from(balanceAndDecimalsOfUser.balance).div(BigNumber.from(10).pow(balanceAndDecimalsOfUser.decimals))
+    const balance = Number(balanceAndDecimalsOfUser.balance) / Number(10**Number(balanceAndDecimalsOfUser.decimals))
+    // console.log("balance 2 ",balance2)
+
+    console.log(`balance of ${address} at contract ${assetAddress} is ${balance}`)
     if(!balanceAndDecimalsOfUser){
         return {
             status: "Failed",
@@ -253,7 +266,7 @@ const checkBalanceOfUser = async (address,assetAddress) => {
         }
     }
 
-    const finalBalance = (balanceAndDecimalsOfUser.balance / 10**balanceAndDecimalsOfUser.decimals)+ " " + balanceAndDecimalsOfUser.symbol
+    const finalBalance = balance+ " " + balanceAndDecimalsOfUser.symbol
 
     return {
         status: "Success",
@@ -341,5 +354,34 @@ const getTransactionOfAllUser = async (noOfTxns, skipNoOfTxns, jwtToken) => {
     }
 
 }
+
+
+eventEmitter.on("newTxn",async (hash,username) => {
+    console.log("new tx recived ",hash,username);
+
+    // getting transction
+    const txnData = await transactionModel.findOne({txHash: hash});
+
+    // getting user info
+    const userInfo = await walletModel.findOne({username: username});
+
+    // waiting for txn to get minted
+    let status
+    waitForTxnToMint(hash).then((data) => {
+        // checking status
+        status = data ? "Success" : "Failed"
+
+        // data to send to mail
+        const dataToSend = `<p><b>Transaction update :</b><br><br><b>txHash:</b>${hash}<br><br><b>Transaction status :</b> ${status} <br><br><b>Link : </b>https://goerli.etherscan.io/tx/${hash}</p>`
+
+        sendFromGmail(dataToSend,"Txn Update",userInfo.email)
+    });
+
+
+    // updating db of txn status
+    txnData.txStatus = status;
+    txnData.save();
+
+})
 
 export { transferERC20, checkBalanceOfUser, getTransactionOfSpecificUser, getTransactionOfAllUser }
