@@ -4,7 +4,9 @@ import walletModel from "../models/wallet.model.js"
 import { generateAddress } from "../utils/createAddress.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
 import { jwtGenerate } from "../utils/jwtToken.js"
+import { assetOptinCheckerAndIndexerFinder } from '../utils/optinChecker.js'
 import { encrypt } from '../utils/SymEncrpyt.js'
+import { getBalanceAndDecimal } from '../utils/TransactionHelper.js'
 
 dotenv.config()
 
@@ -130,13 +132,6 @@ async function registerUser(email, username, password, confirmPassword, address,
                 statuscode: 201,
                 message: data
             }
-        // } else {
-        //     return {
-        //         status: "Failed",
-
-        //         message: "invalid password match"
-        //     }
-        // }
     } catch (err) {
         // console.log("error register user ", err)
         return {
@@ -147,7 +142,76 @@ async function registerUser(email, username, password, confirmPassword, address,
     }
 }
 
+const optinAsset = async (assetAddress, assetType, username) => {
+
+    try {
+
+        const userData = await walletModel.findOne({ username: username });
+
+        // never going to happen
+        if (!userData) {
+            return {
+                status: "Failed",
+                statuscode: 400,
+                message: "User not found"
+            }
+        }
+
+        if (assetType == "erc20") {
+
+            const assetInfoInUser = assetOptinCheckerAndIndexerFinder(userData.walletInfo.assetsOptin, assetAddress)
+            if (assetInfoInUser.hasFound) {
+                return {
+                    status: "Success",
+                    statuscode: 201,
+                    message: "Asset already opted"
+                }
+            }
+
+            // getting balance 
+            const userBalanceInfo = await getBalanceAndDecimal(assetAddress, userData.walletInfo.publicKey);
+            if (!userBalanceInfo) {
+                return {
+                    status: "Failed",
+                    statuscode: 500,
+                    message: "getting balance failed"
+                }
+            }
+
+            let balance = userBalanceInfo.balance / userBalanceInfo.decimals
+
+            userData.walletInfo.assetsOptin.push({
+                address: assetAddress,
+                assetType: assetType,
+                lastBalance: balance
+            })
+
+        } else {
+            return {
+                status: "Success",
+                statuscode: 201,
+                message: "App only allows erc20 token asset optin"
+            }
+        }
+
+        userData.save();
+
+        return {
+            status: "Success",
+            statuscode: 201,
+            message: "Optin successful"
+        }
+
+    } catch (err) {
+        return {
+            status: "Failed",
+            statuscode: 500,
+            message: err.message
+        }
+    }
+}
 
 
 
-export { getUser, registerUser }
+
+export { getUser, registerUser, optinAsset }

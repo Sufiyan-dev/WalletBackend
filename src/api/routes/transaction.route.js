@@ -1,9 +1,11 @@
 import express from 'express';
 const router = express.Router()
 
-import { balanceCheck, tokenTransfer, getTransactionOfAll, getTransactionOfUser } from "../controllers/transaction.controller.js"
+import { balanceCheck, tokenTransfer, getTransactionOfAll, getTransactionOfUser, ethTransfer } from "../controllers/transaction.controller.js"
 
 router.post('/transfer/token',tokenTransfer)
+
+router.post('/transfer/eth',ethTransfer)
 
 router.get("/check/balance",balanceCheck)
 

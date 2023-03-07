@@ -1,4 +1,4 @@
-import { transferERC20, checkBalanceOfUser, getTransactionOfSpecificUser, getTransactionOfAllUser } from "../services/transaction.service.js"
+import { transferERC20, checkBalanceOfUser, getTransactionOfSpecificUser, getTransactionOfAllUser, transferETH } from "../services/transaction.service.js"
 import { validateGetTxnOfAll, validateGetTxnOfUser, validateTransferTokenTxn, validateBalanceCheck } from "../validation/txnValidation.js"
 
 
@@ -26,6 +26,16 @@ const tokenTransfer = async (req,res) => {
 
     const result = await transferERC20(user, contractAddress, amount, to)
     res.status(result.statuscode).json(result)
+}
+
+const ethTransfer = async (req,res) => {
+    const { to, amount} = req.body
+    const token = req.jwtToken
+
+    const result = await transferETH(token.username, to, amount, token)
+
+    res.send(result)
+
 }
 
 const balanceCheck = async (req,res) => {
@@ -96,4 +106,4 @@ const getTransactionOfAll = async (req,res) => {
     res.status(result.statuscode).json(result)
 }
 
-export { tokenTransfer, balanceCheck, getTransactionOfUser, getTransactionOfAll }
+export { ethTransfer, tokenTransfer, balanceCheck, getTransactionOfUser, getTransactionOfAll }

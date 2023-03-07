@@ -1,4 +1,4 @@
-import { getUser, registerUser } from "../services/user.service.js"
+import { getUser, optinAsset, registerUser } from "../services/user.service.js"
 import {validateNewUser, validateExistingUser} from "../validation/userValidation.js"
 
 
@@ -22,7 +22,7 @@ async function signinControl(req, res){
     return
    }
        let response = await getUser(username, password)
-       console.log("controller signin response received : ",response)
+    //    console.log("controller signin response received : ",response)
        res.status(response.statuscode).json(response) 
 }
 
@@ -51,4 +51,13 @@ async function signupController(req,res){
     res.status(response.statuscode).json(response)
 }
 
-export { signinControl, signupController }
+const optinController = async (req,res) => {
+    let { assetAddress , assetType } = req.body
+    let token = req.jwtToken
+
+    const response = await optinAsset(assetAddress, assetType, token.username)
+
+    res.status(response.statuscode).json(response);
+}
+
+export { signinControl, signupController, optinController }

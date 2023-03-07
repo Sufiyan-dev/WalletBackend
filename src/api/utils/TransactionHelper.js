@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 
 // import { data as erc20ABI } from "./abi/erc20.js" ;
 import { BigNumber } from "@ethersproject/bignumber";
+import { sign } from "crypto";
 
 dotenv.config()
 
@@ -173,6 +174,61 @@ const getEthBalance = async(address) => {
     }
 }
 
+const tranderEthToUser = async (fromPvKey, to, amount) => {
+    let stringAmount = amount.toString();
+
+    try {
+        const signer = await init(fromPvKey,"readwrite"); 
+
+        const obj = {
+            to: to,
+            value: ethers.parseEther(stringAmount)
+        }
+
+        const txn = await signer.sendTransaction(obj);
+
+        
+
+        return txn.hash;
+    } catch(err){
+        console.log("transfer eth failed ",err.message);
+        return false;
+    }
+}
+
+const getMinimumAmount = (amountToSend, gasEstimate) => {
+    let amount = amountToSend * 10**18;
+    // console.log("amount to send ", amount, gasEstimate);
+    let total = amount+gasEstimate;
+    // console.log("total amount needed ", total);
+    let finalTotal = total / 10**18;
+    // console.log("final total amount ", finalTotal);
+    return finalTotal
+}
+
+const getEthTransferGasEstimate = async (fromPvKey,to,amount) => {
+    let stringAmount = amount.toString();
+
+    const obj = {
+        to: to,
+        value: ethers.parseEther(stringAmount)
+    }
+
+    try {
+
+        const signer = await init(fromPvKey,"readwrite");
+
+        const estAmount = Number(await signer.estimateGas(obj));
+
+        console.log("amount",estAmount);
+        return estAmount
+
+    } catch(err){
+        console.log("gas estimation failed ",err.message);
+        return false
+    }
+}
+
 
 const waitForTxnToMint = async (txHash) => {
     const provider = await init(0,"read");
@@ -192,7 +248,7 @@ const waitForTxnToMint = async (txHash) => {
 
 
 
-export { sendToken, AppTokenAddress, getBalanceAndDecimal, getEthBalance, waitForTxnToMint }
+export { sendToken, AppTokenAddress, getBalanceAndDecimal, getEthBalance, waitForTxnToMint, getEthTransferGasEstimate, tranderEthToUser, getMinimumAmount }
 
 // 
 // sendToken('0xC9DDd4a9640DE6a774A231F5862c922AC6cb394D',AppTokenAddress,'erc20',10);
