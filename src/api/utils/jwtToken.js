@@ -8,7 +8,7 @@ const jsonSecret = process.env.JWT_SECRET_KEY
 const jwtGenerate = (data) => {
     const token = JWT.sign(data,jsonSecret,{expiresIn: 300}) // 5 mins
 
-    console.log("token ", token)
+    // console.log("token ", token)
 
     return token
 }
@@ -16,16 +16,13 @@ const jwtGenerate = (data) => {
 const jwtVerify = (token) => {
     try {
         const verify = JWT.verify(token,jsonSecret);
-        console.log(verify)
+        // console.log(verify)
         return {"status": true, "message": verify}
     } catch(err){
-        console.log("jwt error :",err.message)
+        // console.log("jwt error :",err.message)
         return {"status": false, "message": err.message}
     }
 
 }
-
-// jwtSigxnData({"hey": "hello"})
-
 
 export {jwtGenerate, jwtVerify}

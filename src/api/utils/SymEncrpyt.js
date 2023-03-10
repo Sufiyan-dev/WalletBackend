@@ -13,14 +13,14 @@ const encrypt = (secret, text) => {
   const key = crypto.createHash('sha256').update(String(secret)).digest('base64').substr(0,32); 
   const iv = crypto.randomBytes(ivlength);
 
-  console.log("Encrypting : ",text);
+  // console.log("Encrypting : ",text);
 
   let cipher = crypto.createCipheriv(algorithm, key, iv);
   let ciphered = cipher.update(text, inputEncoding, outputEncoding);
   ciphered += cipher.final(outputEncoding);
   let ciphertext = iv.toString(outputEncoding) + ':' + ciphered
 
-  console.log(`Result in ${outputEncoding} is ${ciphertext}`);
+  // console.log(`Result in ${outputEncoding} is ${ciphertext}`);
 
   return ciphertext;
 }
@@ -34,7 +34,7 @@ const decrypt = (encryptedData, secret) => {
   let deciphered = decipher.update(components.join(':'), outputEncoding, inputEncoding);
   deciphered += decipher.final(inputEncoding);
 
-  console.log("Decrypted data : ",deciphered)
+  // console.log("Decrypted data : ",deciphered)
 
   return deciphered
 }

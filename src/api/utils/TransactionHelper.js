@@ -1,10 +1,6 @@
 import { ethers } from "ethers";
-
 import dotenv from 'dotenv'
-
-// import { data as erc20ABI } from "./abi/erc20.js" ;
 import { BigNumber } from "@ethersproject/bignumber";
-import { sign } from "crypto";
 
 dotenv.config()
 
@@ -44,7 +40,7 @@ async function init(pvKey,type){
     // updating 
     currentAccount = signer.address
 
-    console.log("Using address ", currentAccount)
+    // console.log("Using address ", currentAccount)
 
     return signer
 }
@@ -54,10 +50,6 @@ async function getContractInstance(address, abi, signer){
     const ContractInstance = new ethers.Contract(address, abi, signer);
 
     return ContractInstance
-}
-
-async function sendTransaction(TokenAmount){
-
 }
 
 /**
@@ -79,25 +71,23 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
             signer = await init(fromPvKey,"readwrite")
         }
 
-        console.log("singer : ",signer.address);
+        // console.log("singer : ",signer.address);
 
         let contractInstance, contract
 
         // checking the type of contract 
         if (contractType == 'erc20') { // if erc20 contract 
-
             // getting contract instance 
             contractInstance = await getContractInstance(contractAddress, erc20ABI, signer)
-
         } 
 
         // getting the name of contract
         let name = await contractInstance.name()
-        console.log("name of contract ", name);
+        // console.log("name of contract ", name);
 
         // getting the balance of current user
         let balance = Number(await contractInstance.balanceOf(currentAccount))
-        console.log(`Balance of ${currentAccount} is ${balance / 10**18}`)
+        // console.log(`Balance of ${currentAccount} is ${balance / 10**18}`)
 
         // checking if balance is less than amount
         let balanceFinal = balance / 10**18
@@ -108,7 +98,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
                 let ammountToMint = BigNumber.from(1000).mul(BigNumber.from(10).pow(18))
                 // minting new token 
                 let mintTokenTxn = await contractInstance.mint(ammountToMint);
-                console.log("mint txn ", mintTokenTxn.transactionHash)
+                // console.log("mint txn ", mintTokenTxn.transactionHash)
             } else {
                 console.log("Insufficent balance in user")
                 return false
@@ -117,13 +107,13 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         let fixAmountToSend = BigNumber.from(amount).mul(BigNumber.from(10).pow(18)).toString()
 
-        console.log(`Transfering ${amount} tokens to ${to}`)
+        // console.log(`Transfering ${amount} tokens to ${to}`)
 
         // let estimateGas = await contractInstance.estimateGas.transfer(to,fixAmountToSend);
         // console.log("gas estimate ", estimateGas);
         // transfering token 
         let transferTxn = await contractInstance.transfer(to,fixAmountToSend);
-        console.log("transfer txn hash : ",transferTxn.hash)
+        // console.log("transfer txn hash : ",transferTxn.hash)
 
         return {"txHash": transferTxn.hash}
     } catch (err) {
@@ -139,8 +129,6 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
         const signer = await init(process.env.APP_PVT_KEY,"read")
 
         const contract = await getContractInstance(contractAddress, erc20ABI, signer);
-
-        // contract.connect(signer)
 
         const balance = await contract.balanceOf(address);
         console.log("balance is ", balance)
@@ -186,8 +174,6 @@ const tranderEthToUser = async (fromPvKey, to, amount) => {
         }
 
         const txn = await signer.sendTransaction(obj);
-
-        
 
         return txn.hash;
     } catch(err){
@@ -241,14 +227,6 @@ const waitForTxnToMint = async (txHash) => {
     return false
 }
 
-
-
-
-
-
-
-
 export { sendToken, AppTokenAddress, getBalanceAndDecimal, getEthBalance, waitForTxnToMint, getEthTransferGasEstimate, tranderEthToUser, getMinimumAmount }
 
-// 
 // sendToken('0xC9DDd4a9640DE6a774A231F5862c922AC6cb394D',AppTokenAddress,'erc20',10);

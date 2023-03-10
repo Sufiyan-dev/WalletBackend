@@ -12,16 +12,14 @@ dotenv.config()
 
 async function getUser(username, password){
     try{
-        console.log(password,typeof(password))
+
         // getting the user from db
         let userInfo = await walletModel.findOne({username: username})
-        console.log("user ", userInfo)
 
         // if not then throw error
         if(!userInfo){
             return {
-                status: "Failed",
-                statuscode: 400,
+                status: false,
                 message: "invalid user"
             }
         }
@@ -31,12 +29,10 @@ async function getUser(username, password){
 
         // checking if the password is valid
         let check = await checkPassword(password,hash);
-        console.log(check)
 
         if(!check){
             return {
-                status: "Failed",
-                statuscode: 400,
+                status: false,
                 message: "invalid password"
             }
         }
@@ -51,16 +47,14 @@ async function getUser(username, password){
         const token = jwtGenerate(obj)
 
         return {
-            status: "Success",
-            statuscode: 201,
+            status: true,
             message: { user: userInfo, token: token}
         }
 
     } catch(err){
         console.log("error hash ",err)
         return { 
-            status: "Failed error",
-            statuscode: 500,
+            status: false,
             message: err.message
         }
     }
@@ -73,7 +67,7 @@ async function registerUser(email, username, password, confirmPassword, address,
 
             if(adminPass){ // checking if admin exist
                 if(adminPass != process.env.ADMIN_PASS){ // cheking valid admin pass
-                    return {status: "Failed",statuscode: 400, message: "Invalid admin password"}
+                    return {status: false, message: "Invalid admin password"}
                 }else {
                     adminAccess = true
                 }
@@ -87,8 +81,7 @@ async function registerUser(email, username, password, confirmPassword, address,
             // validation
             if(isEmailExist || isUsernameExist){
                 return {
-                    status: "Failed",
-                    statuscode: 400,
+                    status: false,
                     message: "User already exist"
                 }
             }
@@ -98,7 +91,7 @@ async function registerUser(email, username, password, confirmPassword, address,
 
             // checking if any error
             if (!hash) {
-                return {status: "Failed", statuscode: 500, message: "encrypting password failed"}
+                return {status: false, message: "encrypting password failed"}
             }
 
             let adddressInfo
@@ -128,15 +121,13 @@ async function registerUser(email, username, password, confirmPassword, address,
 
             // returing the user info
             return {
-                status: "Success",
-                statuscode: 201,
+                status: true,
                 message: data
             }
     } catch (err) {
         // console.log("error register user ", err)
         return {
-            status: "Failed catch",
-            statuscode: 500,
+            status: false,
             message: err.message
         }
     }
@@ -151,8 +142,7 @@ const optinAsset = async (assetAddress, assetType, username) => {
         // never going to happen
         if (!userData) {
             return {
-                status: "Failed",
-                statuscode: 400,
+                status: false,
                 message: "User not found"
             }
         }
@@ -162,8 +152,7 @@ const optinAsset = async (assetAddress, assetType, username) => {
             const assetInfoInUser = assetOptinCheckerAndIndexerFinder(userData.walletInfo.assetsOptin, assetAddress)
             if (assetInfoInUser.hasFound) {
                 return {
-                    status: "Success",
-                    statuscode: 201,
+                    status: true,
                     message: "Asset already opted"
                 }
             }
@@ -172,8 +161,7 @@ const optinAsset = async (assetAddress, assetType, username) => {
             const userBalanceInfo = await getBalanceAndDecimal(assetAddress, userData.walletInfo.publicKey);
             if (!userBalanceInfo) {
                 return {
-                    status: "Failed",
-                    statuscode: 500,
+                    status: false,
                     message: "getting balance failed"
                 }
             }
@@ -188,8 +176,7 @@ const optinAsset = async (assetAddress, assetType, username) => {
 
         } else {
             return {
-                status: "Success",
-                statuscode: 201,
+                status: true,
                 message: "App only allows erc20 token asset optin"
             }
         }
@@ -197,15 +184,13 @@ const optinAsset = async (assetAddress, assetType, username) => {
         userData.save();
 
         return {
-            status: "Success",
-            statuscode: 201,
+            status: true,
             message: "Optin successful"
         }
 
     } catch (err) {
         return {
-            status: "Failed",
-            statuscode: 500,
+            status: false,
             message: err.message
         }
     }

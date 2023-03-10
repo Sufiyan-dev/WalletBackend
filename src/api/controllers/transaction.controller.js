@@ -1,4 +1,5 @@
 import { transferERC20, checkBalanceOfUser, getTransactionOfSpecificUser, getTransactionOfAllUser, transferETH } from "../services/transaction.service.js"
+import { handleError, handleResponse } from "../utils/responseHelper.js"
 import { validateGetTxnOfAll, validateGetTxnOfUser, validateTransferTokenTxn, validateBalanceCheck } from "../validation/txnValidation.js"
 
 
@@ -17,24 +18,54 @@ const tokenTransfer = async (req,res) => {
         to: to
     }
 
-    const resp = validateTransferTokenTxn(obj);
+    try {
 
-    if(resp.status){
-        res.status(400).json({ status:"Failed" ,message: resp.message})
-        return
+        const resp = validateTransferTokenTxn(obj);
+
+        if(resp.status){
+            throw new TypeError(resp.message)
+        }
+
+        const result = await transferERC20(user, contractAddress, amount, to);
+
+        if(!result.status){
+            throw new TypeError(result.message)
+        }
+
+        handleResponse({res, statusCode: 201, msg: result.message})
+
+    } catch(err){
+        if (err instanceof TypeError) {
+            handleError({ res, statusCode: 400, err: err });
+        } else {
+            // internal error
+            handleError({ res, statusCode: 500, err: err });
+        }
     }
-
-    const result = await transferERC20(user, contractAddress, amount, to)
-    res.status(result.statuscode).json(result)
 }
 
 const ethTransfer = async (req,res) => {
     const { to, amount} = req.body
     const token = req.jwtToken
 
-    const result = await transferETH(token.username, to, amount, token)
+    try {
 
-    res.send(result)
+        const result = await transferETH(token.username, to, amount, token)
+
+        if(!result.status){
+            throw new TypeError(result.message);
+        }
+
+        handleResponse({res, statusCode: 201, msg: result.message})
+
+    } catch(err){
+        if (err instanceof TypeError) {
+            handleError({ res, statusCode: 400, err: err });
+        } else {
+            // internal error
+            handleError({ res, statusCode: 500, err: err });
+        }
+    }
 
 }
 
@@ -47,63 +78,101 @@ const balanceCheck = async (req,res) => {
         contractAddress: contractAddress
     }
 
-    const resp = validateBalanceCheck(obj);
+    try {
 
-    if(resp.status){
-        res.status(400).json({ status:"Failed" ,message: resp.message})
-        return
+        const resp = validateBalanceCheck(obj);
+
+        if(resp.status){
+            throw new TypeError(resp.message)
+        }
+    
+        const result = await checkBalanceOfUser(address,contractAddress)
+
+        if(!result.status){
+            throw new TypeError(result.message)
+        }
+
+        handleResponse({res, statusCode: 201, msg: result.message})
+
+    } catch(err){
+        if (err instanceof TypeError) {
+            handleError({ res, statusCode: 400, err: err });
+        } else {
+            // internal error
+            handleError({ res, statusCode: 500, err: err });
+        }
     }
-
-    const result = await checkBalanceOfUser(address,contractAddress)
-    res.status(result.statuscode).json(result)
 }
 
 const getTransactionOfUser = async (req,res) => {
-    console.log("inside")
-
-    console.log(req.params)
     
     const noOfTxns = req.params.txns
     const skipNoOfTxns = req.params.skip
     const token = req.jwtToken
     const username = token.username
-    console.log(noOfTxns,skipNoOfTxns)
 
     const obj = {
         username: username,
         noOfTxns: noOfTxns
     }
 
-    const resp = validateGetTxnOfUser(obj);
+    try {
 
-    if(resp.status){
-        res.status(400).json({ status:"Failed" ,message: resp.message})
-        return
+        const resp = validateGetTxnOfUser(obj);
+
+        if(resp.status){
+            throw new TypeError(resp.message);
+        }
+    
+        const result = await getTransactionOfSpecificUser(username, noOfTxns, skipNoOfTxns, token)
+
+        if(!result.status){
+            throw new TypeError(result.message);
+        }
+
+        handleResponse({res, statusCode: 201, msg: result.message})
+
+    } catch(err){
+        if (err instanceof TypeError) {
+            handleError({ res, statusCode: 400, err: err });
+        } else {  // internal error
+            handleError({ res, statusCode: 500, err: err });
+        }
     }
-
-    const result = await getTransactionOfSpecificUser(username, noOfTxns, token)
-    res.status(result.statuscode).json(result)
 }
 
 const getTransactionOfAll = async (req,res) => {
     const noOfTxns = req.params.txns
     const skipNoOfTxns = req.params.skip
-    console.log(noOfTxns,skipNoOfTxns)
+    const token = req.jwtToken
 
     const obj = {
         noOfTxns: noOfTxns
     }
 
-    const resp = validateGetTxnOfAll(obj);
+    try {
 
-    if(resp.status){
-        res.status(400).json({ status:"Failed" ,message: resp.message})
-        return
+        const resp = validateGetTxnOfAll(obj);
+
+        if(resp.status){
+            throw new TypeError(resp.message)
+        }
+
+        const result = await getTransactionOfAllUser(noOfTxns, skipNoOfTxns, token)
+        
+        if(!result.status){
+            throw new TypeError(result.message);
+        }
+
+        handleResponse({res,statusCode: 201, msg: result.message})
+
+    } catch(err){
+        if (err instanceof TypeError) {
+            handleError({ res, statusCode: 400, err: err });
+        } else {  // internal error
+            handleError({ res, statusCode: 500, err: err });
+        }
     }
-
-    const token = req.jwtToken
-    const result = await getTransactionOfAllUser(noOfTxns, skipNoOfTxns, token)
-    res.status(result.statuscode).json(result)
 }
 
 export { ethTransfer, tokenTransfer, balanceCheck, getTransactionOfUser, getTransactionOfAll }

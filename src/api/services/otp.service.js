@@ -1,7 +1,7 @@
 import walletModel from "../models/wallet.model.js"
 import OtpModel from "../models/otp.model.js"
 import { checkPassword, generateHashFromPassword } from "../utils/hashPassword.js"
-import { sendFromGmail, sendMail } from "../utils/mailer.js"
+import { sendFromGmail } from "../utils/mailer.js"
 import { AppTokenAddress, sendToken } from "../utils/TransactionHelper.js"
 
 
@@ -9,7 +9,7 @@ const sendOtp = async (username, jwtTokenData) => {
 
     try {
 
-        console.log("toke info", jwtTokenData)
+        // console.log("toke info", jwtTokenData)
 
         // get details of user from db
         // let userData = await walletModel.findOne({ username: username })
@@ -24,20 +24,19 @@ const sendOtp = async (username, jwtTokenData) => {
 
         if(/*userData.verified*/ jwtTokenData.verified){
             return {
-                status: "failed",
-                statuscode: 400,
+                status: false,
                 message: "User already verfied"
             }
         }
 
         // genrating otp
         const OTP = Math.floor(1000 + Math.random() * 9000)
-        console.log("otp generated ",OTP);
+        // console.log("otp generated ",OTP);
 
         let otpString = OTP.toString()
 
         let otpHash = await generateHashFromPassword(otpString)
-        console.log("otp hash ",otpHash);
+        // console.log("otp hash ",otpHash);
 
         // 
         let mail = jwtTokenData.email;
@@ -54,14 +53,12 @@ const sendOtp = async (username, jwtTokenData) => {
 
         if(sended){
             return {
-                status: "Success",
-                statuscode: 200,
+                status: true,
                 message: `Mail sended success to ${mail}`
             }
         }else{
             return {
-                status: "Failed",
-                statuscode: 500,
+                status: false,
                 message: "Mail send failed"
             }
         }
@@ -69,8 +66,7 @@ const sendOtp = async (username, jwtTokenData) => {
 
     } catch (err) {
         return {
-            status: "Failed error",
-            statuscode: 500,
+            status: false,
             message: err.message 
         }
     }
@@ -85,8 +81,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     // validate
     if(!userData){
         return {
-            status: "Failed",
-            statuscode: 400,
+            status: false,
             message: "Invalid User"
         }
     }
@@ -96,8 +91,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     // console.log("user details ",otpDetails)
     if(otpDetailsArray.length == 0){
         return {
-            status: "Failed",
-            statuscode: 400,
+            status: false,
             message: "No otp generated yet"
         }
     }
@@ -108,8 +102,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
     if(otpDetails.expiredAt < Date.now()){
         return {
-            status: "Failed",
-            statuscode: 401,
+            status: false,
             message: "OTP expired"
         }
     }
@@ -124,8 +117,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     console.log("valid", valid)
     if(!valid){
         return {
-            status: "Failed",
-            statuscode: 400,
+            status: false,
             message: "Invalid OTP"
         }
     }
@@ -135,8 +127,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
     if (!success) {
         return {
-            status: "Failed",
-            statuscode: 500,
+            status: false,
             message: "Token sending error"
         }
     }
@@ -157,8 +148,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
     await OtpModel.deleteMany({email: userData.email})
 
     return {
-        status: "Success",
-        statuscode: 201,
+        status: true,
         message: userData
     }
 }

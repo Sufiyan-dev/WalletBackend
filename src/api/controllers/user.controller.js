@@ -1,10 +1,9 @@
 import { getUser, optinAsset, registerUser } from "../services/user.service.js"
+import { handleError, handleResponse } from "../utils/responseHelper.js"
 import {validateNewUser, validateExistingUser} from "../validation/userValidation.js"
 
 
 async function signinControl(req, res){
-    // console.log("params ",req.params)
-    // console.log("body ",req.body)
    // getting the email
    let username = req.params.username
 
@@ -16,14 +15,31 @@ async function signinControl(req, res){
     password: password
    }
 
-   const result = validateExistingUser(obj)
-   if(result.status){
-    res.status(400).json({ status:"Failed" ,message: result.message})
-    return
+   try {
+
+        const result = validateExistingUser(obj);
+
+        if(result.status){ // validation error
+            throw new TypeError(result.message, 500);
+        }
+
+        let response = await getUser(username, password)
+
+        if(!response.status){ // error
+            throw new TypeError(response.message,500)
+        }
+
+        handleResponse({res,statusCode: 201, result: response.message})
+        // res.status(response.statuscode).json(resp1onse) 
+
+   } catch(err){
+        if (err instanceof TypeError) {
+        handleError({ res, statusCode: 400, err: err });
+        } else {
+        // internal error
+        handleError({ res, statusCode: 500, err: err });
+        }
    }
-       let response = await getUser(username, password)
-    //    console.log("controller signin response received : ",response)
-       res.status(response.statuscode).json(response) 
 }
 
 async function signupController(req,res){
@@ -38,26 +54,67 @@ async function signupController(req,res){
         walletPvtAddress: walletPvtAddress
     }
 
-    const result = validateNewUser(obj)
-    console.log(result)
-    if(result.status){
-        res.status(400).json({status:"Failed" , message: result.message })
-        return; 
+    try {
+        const result = validateNewUser(obj);
+
+        if (result.status) {
+            
+          throw new TypeError(result.message);
+          // res.status(400).json({status:"Failed" , message: result.message })
+        }
+
+        let response = await registerUser(
+          email,
+          username,
+          password,
+          confirmPassword,
+          walletAddress,
+          walletPvtAddress,
+          adminPass
+        );
+
+        if(!response.status){
+            throw new TypeError(response.message);
+        }
+
+        handleResponse({res, statusCode: 201, msg: response})
+        
+        // res.status(response.statuscode).json(response);
+    } catch(err){
+        if(err instanceof TypeError){
+            handleError({res, statusCode: 400, err: err})
+        } else { // internal error
+            handleError({res, statusCode: 500, err: err })
+        }
     }
-
-
-    let response = await registerUser(email, username, password, confirmPassword, walletAddress, walletPvtAddress, adminPass)
-    // console.log("controller signup response : ",response)
-    res.status(response.statuscode).json(response)
 }
 
 const optinController = async (req,res) => {
     let { assetAddress , assetType } = req.body
     let token = req.jwtToken
 
-    const response = await optinAsset(assetAddress, assetType, token.username)
+    try {
+        const response = await optinAsset(
+          assetAddress,
+          assetType,
+          token.username
+        );
 
-    res.status(response.statuscode).json(response);
+        if (!response.status) {
+            throw new TypeError(response.message);
+        }
+
+        handleResponse({res, statusCode: 201, msg: response.message})
+
+    } catch(err) {
+        if(err instanceof TypeError){
+            handleError({res, statusCode: 400, err: err})
+        } else { // internal error
+            handleError({res, statusCode: 500, err: err })
+        }
+    }
+
+    // res.status(response.statuscode).json(response);
 }
 
 export { signinControl, signupController, optinController }

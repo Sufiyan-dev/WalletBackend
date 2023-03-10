@@ -31,6 +31,7 @@ const validateExistingUser = (userDataObj) => {
     const data = existUserSchema.validate(userDataObj);
 
     if(data.error){
+        // console.log(data)
         return {status: data.error.isJoi, message: data.error.message}
     } else {
         return { status: false, message: "pass"}
