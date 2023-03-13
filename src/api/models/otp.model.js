@@ -6,8 +6,8 @@ const optSchema = new mongoose.Schema({
     otp:String,
     createdAt:Number,
     expiredAt:Number
-})
+});
 
-const OtpModel = db.model("Otp",optSchema);
+const OtpModel = db.model('Otp',optSchema);
 
 export default OtpModel;

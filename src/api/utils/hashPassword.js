@@ -1,26 +1,28 @@
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-dotenv.config()
+import logger from '../logger/index.js';
+dotenv.config();
 
 
-const saltRounds = Number(process.env.saltRounds)
+// eslint-disable-next-line no-undef
+const saltRounds = Number(process.env.saltRounds);
 
 const generateHashFromPassword = async (password) => {
-    console.log("salt ",typeof(saltRounds))
+
+    try {
+        let salt = await bcrypt.genSalt(saltRounds);
+        let hash = await bcrypt.hash(password,salt);
+        return hash;
+    } catch(err){
+        logger.error('generateHash of pass error : ',err.message);
+        return false;
+    }
     
-    let salt = await bcrypt.genSalt(saltRounds);
-    console.log("salt ", salt)
-    let hash = await bcrypt.hash(password,salt);
-    console.log("hash ", hash)
-    return hash
-    
-}
+};
 
 const checkPassword = async (password, passHash) => {
-    let isMatched = await bcrypt.compare(password,passHash)
-   
-    // console.log(isMatched)
-    return isMatched
-}
+    let isMatched = await bcrypt.compare(password,passHash);
+    return isMatched;
+};
 
-export {generateHashFromPassword, checkPassword}
+export {generateHashFromPassword, checkPassword};

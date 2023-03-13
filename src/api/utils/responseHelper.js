@@ -3,26 +3,26 @@
 const handleResponse = ({
     res,
     statusCode = 200,
-    msg = "Success",
+    msg = 'Success',
     result = {}
 }) => {
-    res.status(statusCode).send({result, msg})
-}
+    res.status(statusCode).send({result, msg});
+};
 
 const handleError = ({
     res,
     statusCode = 500,
-    err = "Error",
+    err = 'Error',
     result = {}
 }) => {
-    res.status(statusCode).send({result, msg: err.message || "Error"})
-}
+    res.status(statusCode).send({result, msg: err.message || 'Error'});
+};
 
 const handleUnAuthorized = ({
     res, 
-    err = "Unauthorized"
+    err = 'Unauthorized'
 }) => {
-    res.status(401).send({msg: err.message ? err.message : err })
-}
+    res.status(401).send({msg: err.message ? err.message : err });
+};
 
-export { handleResponse, handleError, handleUnAuthorized }
+export { handleResponse, handleError, handleUnAuthorized };

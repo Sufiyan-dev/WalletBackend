@@ -1,5 +1,5 @@
-import db from "../../config/db.config.js";
-import mongoose from "mongoose";
+import db from '../../config/db.config.js';
+import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
     txHash:String,
@@ -9,8 +9,8 @@ const transactionSchema = new mongoose.Schema({
     tokenAddress:String,
     tokenAmount:String,
     tokenType:String,
-})
+});
 
-const transactionModel = db.model("Transactions",transactionSchema);
+const transactionModel = db.model('Transactions',transactionSchema);
 
-export default transactionModel
+export default transactionModel;

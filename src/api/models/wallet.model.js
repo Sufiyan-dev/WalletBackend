@@ -16,8 +16,8 @@ const walletSchema = new mongoose.Schema({
             lastBalance: Number
         }]
     }
-})
+});
 
-const walletModel = db.model("Wallet",walletSchema)
+const walletModel = db.model('Wallet',walletSchema);
 
-export default walletModel
+export default walletModel;

@@ -1,19 +1,22 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-dotenv.config()
+import logger from '../api/logger/index.js';
+dotenv.config();
 
-// console.log(process.env.mongoURI)
 
-mongoose.connect(process.env.mongoURI)
+// eslint-disable-next-line no-undef
+mongoose.connect(process.env.mongoURI);
 
-const db = mongoose.connection
+const db = mongoose.connection;
 
 db.on('connected', () => {
-    console.log('database is connected successfully');
+    logger.info('database is connected successfully');
 });
 db.on('disconnected',() => {
-    console.log('database is disconnected successfully');
-})
-db.on('error', console.error.bind(console, 'connection error:'));
+    logger.info('database is disconnected successfully');
+});
+db.on('error', (error) => {
+    logger.error(error, 'connection error:');
+});
 
-export default db
+export default db;
