@@ -132,13 +132,13 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
         const contract = await getContractInstance(contractAddress, erc20ABI, signer);
 
         const balance = await contract.balanceOf(address);
-        logger.debug('balance is ', balance);
+        logger.debug('balance is '+ balance);
         const decimals = await contract.decimals();
-        logger.debug('decimals ', decimals);
+        logger.debug('decimals '+ decimals);
         const symbol = await contract.symbol();
-        logger.debug('symbol ',symbol);
+        logger.debug('symbol '+symbol);
 
-        return {'balance': Number(balance),'decimals': Number(decimals), 'symbol': Number(symbol)};
+        return {'balance': Number(balance),'decimals': Number(decimals), 'symbol': symbol};
 
     } catch(err){
         logger.error('error getBalance : ',err.message);

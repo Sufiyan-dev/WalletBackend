@@ -20,23 +20,23 @@ async function signinControl(req, res){
         const result = validateExistingUser(obj);
 
         if(result.status){ // validation error
-            throw new TypeError(result.message, 500);
+            throw new TypeError(result.message);
         }
 
         let response = await getUser(username, password);
 
         if(!response.status){ // error
-            throw new TypeError(response.message,500);
+            throw new TypeError(response.message);
         }
 
         handleResponse({res,statusCode: 201, result: response.message});
 
     } catch(err){
         if (err instanceof TypeError) {
-            handleError({ res, statusCode: 400, err: err });
+            handleError({ res, statusCode: 400, result: err.message });
         } else {
         // internal error
-            handleError({ res, statusCode: 500, err: err });
+            handleError({ res, statusCode: 500, result: err.message });
         }
     }
 }
@@ -75,13 +75,13 @@ async function signupController(req,res){
             throw new TypeError(response.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: response});
+        handleResponse({res, statusCode: 201, result: response.message});
         
     } catch(err){
         if(err instanceof TypeError){
-            handleError({res, statusCode: 400, err: err});
+            handleError({res, statusCode: 400, result: err.message});
         } else { // internal error
-            handleError({res, statusCode: 500, err: err });
+            handleError({res, statusCode: 500, result: err.message });
         }
     }
 }
@@ -101,13 +101,13 @@ const optinController = async (req,res) => {
             throw new TypeError(response.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: response.message});
+        handleResponse({res, statusCode: 201, result: response.message});
 
     } catch(err) {
         if(err instanceof TypeError){
-            handleError({res, statusCode: 400, err: err});
+            handleError({res, statusCode: 400, result: err.message});
         } else { // internal error
-            handleError({res, statusCode: 500, err: err });
+            handleError({res, statusCode: 500, result: err.message });
         }
     }
 };

@@ -27,7 +27,6 @@ const verifyUser = (req,res,next) => {
             handleUnAuthorized({res, err: data}); // invalid token
         }
     }else {
-        // console.log("verified")
         req.jwtToken = data.message;
         next();
     }

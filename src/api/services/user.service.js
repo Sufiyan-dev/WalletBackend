@@ -77,7 +77,7 @@ async function registerUser(email, username, password, confirmPassword, address,
         let isEmailExist = await walletModel.exists({email: email});
         let isUsernameExist = await walletModel.exists({username:username});
 
-        logger.debug(isEmailExist,isUsernameExist);
+        logger.debug('email exist : '+isEmailExist+' user exist : '+isUsernameExist);
 
         // validation
         if(isEmailExist || isUsernameExist){

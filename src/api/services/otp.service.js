@@ -77,7 +77,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
         // gettign the otp details of that user
         let otpDetailsArray = await OtpModel.find({email: email});
-        logger.debug('otp data fetched length : ',otpDetailsArray.length);
+        logger.debug('otp data fetched length : '+otpDetailsArray.length);
         if(otpDetailsArray.length == 0){
             return {
                 status: false,

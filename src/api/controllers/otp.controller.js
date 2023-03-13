@@ -28,7 +28,7 @@ const generateOtpForUser = async (req,res) => {
         }
 
         // sending the result back
-        handleResponse({res, statusCode: 201, msg: result});
+        handleResponse({res, statusCode: 201, result: result});
 
     } catch(err){
         if (err instanceof TypeError) {
@@ -63,7 +63,7 @@ const verifyOtpOfUser = async (req,res) => {
         }
 
         // sending the resposne back
-        handleResponse({res, statusCode: 201, msg: result.message});
+        handleResponse({res, statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {

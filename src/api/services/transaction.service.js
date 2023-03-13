@@ -236,7 +236,7 @@ const checkBalanceOfUser = async (address, assetAddress) => {
         }
 
         const finalBalance = balance + ' ' + balanceAndDecimalsOfUser.symbol;
-
+        logger.debug('balance is : '+finalBalance);
         return {
             status: true,
             message: finalBalance,

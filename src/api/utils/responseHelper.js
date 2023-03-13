@@ -15,7 +15,7 @@ const handleError = ({
     err = 'Error',
     result = {}
 }) => {
-    res.status(statusCode).send({result, msg: err.message || 'Error'});
+    res.status(statusCode).send({result, msg: err});
 };
 
 const handleUnAuthorized = ({

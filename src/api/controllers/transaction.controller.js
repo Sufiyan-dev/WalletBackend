@@ -32,7 +32,7 @@ const tokenTransfer = async (req,res) => {
             throw new TypeError(result.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: result.message});
+        handleResponse({res, statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {
@@ -55,7 +55,7 @@ const ethTransfer = async (req,res) => {
             throw new TypeError(result.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: result.message});
+        handleResponse({res, statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {
@@ -90,7 +90,7 @@ const balanceCheck = async (req,res) => {
             throw new TypeError(result.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: result.message});
+        handleResponse({res, statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {
@@ -127,7 +127,7 @@ const getTransactionOfUser = async (req,res) => {
             throw new TypeError(result.message);
         }
 
-        handleResponse({res, statusCode: 201, msg: result.message});
+        handleResponse({res, statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {
@@ -161,7 +161,7 @@ const getTransactionOfAll = async (req,res) => {
             throw new TypeError(result.message);
         }
 
-        handleResponse({res,statusCode: 201, msg: result.message});
+        handleResponse({res,statusCode: 201, result: result.message});
 
     } catch(err){
         if (err instanceof TypeError) {
