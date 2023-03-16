@@ -23,7 +23,7 @@ const sendOtp = async (username, jwtTokenData) => {
         let otpString = OTP.toString();
 
         let otpHash = await generateHashFromPassword(otpString);
-        logger.debug('otp hash ',otpHash);
+        logger.debug(`otp hash : ${otpHash} `);
 
         // 
         let mail = jwtTokenData.email;
@@ -52,7 +52,7 @@ const sendOtp = async (username, jwtTokenData) => {
 
 
     } catch (err) {
-        logger.error('sending otp error : ', err.message);
+        logger.error(`sending otp error : ${err.message}`);
         return {
             status: false,
             message: err.message 
@@ -77,7 +77,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
         // gettign the otp details of that user
         let otpDetailsArray = await OtpModel.find({email: email});
-        logger.debug('otp data fetched length : '+otpDetailsArray.length);
+        logger.debug(`otp data fetched length : ${otpDetailsArray.length}`);
         if(otpDetailsArray.length == 0){
             return {
                 status: false,
@@ -87,7 +87,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
 
         // getting the latest otp
         let otpDetails = otpDetailsArray[otpDetailsArray.length - 1];
-        logger.debug(otpDetails);
+        logger.debug(`Otp details : ${JSON.stringify(otpDetails)}`);
 
         if(otpDetails.expiredAt < Date.now()){
             return {
@@ -103,7 +103,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
         // check if otp is true or not
         let valid = await checkPassword(otpString,otpHash);
 
-        logger.debug('valid', valid);
+        logger.debug(`valid ${valid}`);
         if(!valid){
             return {
                 status: false,
@@ -142,7 +142,7 @@ const confirmOtp = async (user, jwtTokenData, otp) => {
         };
 
     } catch(err){
-        logger.error('confirm opt error : ',err.message);
+        logger.error(`confirm opt error : ${err.message}`);
         return {
             status: false,
             message: err.message

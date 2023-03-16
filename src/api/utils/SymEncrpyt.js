@@ -16,7 +16,7 @@ const encrypt = (secret, text) => {
         const key = crypto.createHash('sha256').update(String(secret)).digest('base64').substr(0,32); 
         const iv = crypto.randomBytes(ivlength);
 
-        logger.silly('Encrypting : ',text);
+        logger.silly(`Encrypting : ${text}`);
 
         let cipher = crypto.createCipheriv(algorithm, key, iv);
         let ciphered = cipher.update(text, inputEncoding, outputEncoding);
@@ -27,7 +27,7 @@ const encrypt = (secret, text) => {
 
         return ciphertext;
     } catch(err){
-        logger.error('encrypt private key error : ', err.message);
+        logger.error(`encrypt private key error : ${err.message}`);
         return false;
     }
 };

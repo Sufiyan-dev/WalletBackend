@@ -13,7 +13,7 @@ const jwtGenerate = (data) => {
         const token = JWT.sign(data,jsonSecret,{expiresIn: 300}); // 5 mins
         return token;
     } catch(err){
-        logger.error('jwt sign error : ',err.message);
+        logger.error(`jwt sign error : ${err.message}`);
         return false;
     }
 };
@@ -23,7 +23,7 @@ const jwtVerify = (token) => {
         const verify = JWT.verify(token,jsonSecret);
         return {'status': true, 'message': verify};
     } catch(err){
-        logger.debug('jwt error :',err.message);
+        logger.debug(`jwt error : ${err.message}`);
         return {'status': false, 'message': err.message};
     }
 

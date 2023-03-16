@@ -43,7 +43,7 @@ async function init(pvKey,type){
     // updating 
     currentAccount = signer.address;
 
-    logger.info('Using address ', currentAccount);
+    logger.info(`Using address : ${currentAccount}`);
 
     return signer;
 }
@@ -74,7 +74,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
             signer = await init(fromPvKey,'readwrite');
         }
 
-        logger.debug('singer address : ',signer.address);
+        logger.debug(`singer address : ${signer.address}`);
 
         let contractInstance;
 
@@ -86,7 +86,7 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         // getting the name of contract
         let name = await contractInstance.name();
-        logger.debug('name of contract ', name);
+        logger.debug(`name of contract : ${name}`);
 
         // getting the balance of current user
         let balance = Number(await contractInstance.balanceOf(currentAccount));
@@ -94,14 +94,14 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         // checking if balance is less than amount
         let balanceFinal = balance / 10**18;
-        logger.debug('Balance is ',balanceFinal,' Amount is ',amount,balanceFinal < amount ? true : false);
+        logger.debug(`Balance is ${balanceFinal}, Amount is ${amount}, ${balanceFinal < amount ? true : false}`);
         if( balanceFinal < amount){
             if(contractAddress == AppTokenAddress){
                 logger.debug('Insufficent funds minting fresh ones');
                 let ammountToMint = BigNumber.from(1000).mul(BigNumber.from(10).pow(18));
                 // minting new token 
                 let mintTokenTxn = await contractInstance.mint(ammountToMint);
-                logger.debug('mint txn ', mintTokenTxn.transactionHash);
+                logger.debug(`mint txn : ${mintTokenTxn.transactionHash}`);
             } else {
                 logger.debug('Insufficent balance in user');
                 return false;
@@ -114,11 +114,11 @@ async function sendToken(fromPvKey,to, contractAddress, contractType, amount){
 
         // transfering token 
         let transferTxn = await contractInstance.transfer(to,fixAmountToSend);
-        logger.debug('transfer txn hash : ',transferTxn.hash);
+        logger.debug(`transfer txn hash : ${transferTxn.hash}`);
 
         return {'txHash': transferTxn.hash};
     } catch (err) {
-        logger.error('error send token : ', err);
+        logger.error(`error send token : ${err.message}`);
         return false;
     }
 }
@@ -132,16 +132,16 @@ const getBalanceAndDecimal = async (contractAddress,address) => {
         const contract = await getContractInstance(contractAddress, erc20ABI, signer);
 
         const balance = await contract.balanceOf(address);
-        logger.debug('balance is '+ balance);
+        logger.debug(`balance is ${balance}`);
         const decimals = await contract.decimals();
-        logger.debug('decimals '+ decimals);
+        logger.debug(`decimals is ${decimals}`);
         const symbol = await contract.symbol();
-        logger.debug('symbol '+symbol);
+        logger.debug(`symbol is ${symbol}`);
 
         return {'balance': Number(balance),'decimals': Number(decimals), 'symbol': symbol};
 
     } catch(err){
-        logger.error('error getBalance : ',err.message);
+        logger.error(`error getBalance : ${err.message}`);
         return false;
     }
 };
@@ -158,7 +158,7 @@ const getEthBalance = async(address) => {
         return finalAmount;
 
     } catch(err){
-        logger.error('get eth balance error ', err.message);
+        logger.error(`get eth balance error : ${err.message}`);
         return false;
     }
 };
@@ -178,18 +178,18 @@ const tranderEthToUser = async (fromPvKey, to, amount) => {
 
         return txn.hash;
     } catch(err){
-        logger.error('transfer eth failed ',err.message);
+        logger.error(`transfer eth failed : ${err.message}`);
         return false;
     }
 };
 
 const getMinimumAmount = (amountToSend, gasEstimate) => {
     let amount = amountToSend * 10**18;
-    logger.debug('amount to send ', amount, gasEstimate);
+    logger.debug(`amount to send ${amount} gasEstimate : ${gasEstimate}`);
     let total = amount+gasEstimate;
-    logger.debug('total amount needed ', total);
+    logger.debug(`total amount needed ${total}`);
     let finalTotal = total / 10**18;
-    logger.debug('final total amount ', finalTotal);
+    logger.debug(`final total amount ${finalTotal}`);
     return finalTotal;
 };
 
@@ -207,11 +207,11 @@ const getEthTransferGasEstimate = async (fromPvKey,to,amount) => {
 
         const estAmount = Number(await signer.estimateGas(obj));
 
-        logger.debug('amount',estAmount);
+        logger.debug(`amount ${estAmount}`);
         return estAmount;
 
     } catch(err){
-        logger.error('gas estimation failed ',err.message);
+        logger.error(`gas estimation failed : ${err.message}`);
         return false;
     }
 };
@@ -221,7 +221,7 @@ const waitForTxnToMint = async (txHash) => {
     const provider = await init(0,'read');
 
     const txn = await provider.waitForTransaction(txHash);
-    logger.debug('tx confirmed ',txn.hash);
+    logger.debug(`tx confirmed  : ${txn.hash}`);
     if(txn){
         return true;
     } 

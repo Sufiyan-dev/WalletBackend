@@ -33,14 +33,14 @@ async function sendFromGmail(data, topic, to) {
         };
 
         let response = await transport.sendMail(mailDetails);
-        logger.debug(response);
+        logger.debug(`Mail resposne : ${response}`);
         if(response.rejected.length == 0){
             return true;
         } else {
             return false;
         }
     } catch(err){
-        logger.error('send email error : ',err.message);
+        logger.error(`send email error : ${err.message}`);
         return false;
     }
 }

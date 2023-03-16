@@ -14,7 +14,7 @@ const generateHashFromPassword = async (password) => {
         let hash = await bcrypt.hash(password,salt);
         return hash;
     } catch(err){
-        logger.error('generateHash of pass error : ',err.message);
+        logger.error(`generateHash of pass error : ${err.message}`);
         return false;
     }
     

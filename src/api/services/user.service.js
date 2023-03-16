@@ -52,7 +52,7 @@ async function getUser(username, password){
         };
 
     } catch(err){
-        logger.error('get user error : ',err);
+        logger.error(`get user error : ${err.message}`);
         return { 
             status: false,
             message: err.message
@@ -77,7 +77,7 @@ async function registerUser(email, username, password, confirmPassword, address,
         let isEmailExist = await walletModel.exists({email: email});
         let isUsernameExist = await walletModel.exists({username:username});
 
-        logger.debug('email exist : '+isEmailExist+' user exist : '+isUsernameExist);
+        logger.debug(`email exist : ${isEmailExist}  user exist : ${isUsernameExist}`);
 
         // validation
         if(isEmailExist || isUsernameExist){
@@ -125,7 +125,7 @@ async function registerUser(email, username, password, confirmPassword, address,
             message: data
         };
     } catch (err) {
-        logger.error('register user error : ', err);
+        logger.error(`register user error : ${err.message}`);
         return {
             status: false,
             message: err.message
@@ -189,7 +189,7 @@ const optinAsset = async (assetAddress, assetType, username) => {
         };
 
     } catch (err) {
-        logger.error('optin asset error : ',err.message);
+        logger.error(`optin asset error : ${err.message}`);
         return {
             status: false,
             message: err.message

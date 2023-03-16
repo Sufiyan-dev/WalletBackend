@@ -6,6 +6,7 @@ import transactionModel from '../models/transaction.model.js';
 import walletModel from '../models/wallet.model.js';
 import { sendFromGmail } from '../utils/mailer.js';
 import { assetOptinCheckerAndIndexerFinder } from '../utils/optinChecker.js';
+import { queryWaiter } from '../utils/querySubgraph.js';
 import { decrypt } from '../utils/SymEncrpyt.js';
 import {
     getBalanceAndDecimal,
@@ -200,14 +201,14 @@ const transferERC20 = async (from, assetAddress, amount, to) => {
             };
         }
 
-        eventEmitter.emit('newTxn', success.txHash, FromuserData.username, 'erc20');
+        eventEmitter.emit('newTxn',success.txHash,FromuserData.username,'erc20');
 
         return {
             status: true,
             message: 'Transfer success',
         };
     } catch (err) {
-        logger.error(err);
+        logger.error(`transfer erc20 ERROR : ${err.message}`);
         return {
             status: false,
             statuscode: 500,
@@ -236,14 +237,14 @@ const checkBalanceOfUser = async (address, assetAddress) => {
         }
 
         const finalBalance = balance + ' ' + balanceAndDecimalsOfUser.symbol;
-        logger.debug('balance is : '+finalBalance);
+        logger.debug(`balance is : ${finalBalance}`);
         return {
             status: true,
             message: finalBalance,
         };
 
     } catch(err){
-        logger.error('check balance error : ',err.message);
+        logger.error(`check balance error : ${err.message}`);
         return {
             status: false,
             message: err.message
@@ -311,7 +312,7 @@ const getTransactionOfSpecificUser = async (
         };
 
     } catch(err){
-        logger.error('getTxn of user error : ',err.message);
+        logger.error(`getTxn of user error : ${err.message}`);
         return {
             status: false,
             message: err.message
@@ -350,7 +351,7 @@ const getTransactionOfAllUser = async (noOfTxns, skipNoOfTxns, jwtToken) => {
         };
 
     } catch(err){
-        logger.error('getTxn of all error : ',err.message);
+        logger.error(`getTxn of all error : ${err.message}`);
         return {
             status: false,
             message: err.message
@@ -395,7 +396,7 @@ const transferETH = async (fromUsername, toUsername, amountInEth) => {
         );
 
         let minimumAmount = getMinimumAmount(amountInEth, estGasAmount);
-        logger.debug('total amount needed ', minimumAmount);
+        logger.debug(`total amount needed ${minimumAmount}`);
 
         // validating
         if (fromEthBalance < minimumAmount) {
@@ -411,7 +412,7 @@ const transferETH = async (fromUsername, toUsername, amountInEth) => {
             amountInEth
         );
 
-        logger.debug('Result ',result);
+        logger.debug(`Result ${result}`);
         if (!result) {
             return {
                 status: false,
@@ -452,7 +453,7 @@ const transferETH = async (fromUsername, toUsername, amountInEth) => {
             message: 'Transfer success',
         };
     } catch (err) {
-        logger.error('transfer ETH error : ',err);
+        logger.error(`transfer ETH error : ${err.message}`);
         return {
             status: false,
             message: err.message,
@@ -461,38 +462,43 @@ const transferETH = async (fromUsername, toUsername, amountInEth) => {
 };
 
 
-eventEmitter.on('newTxn', async (hash, username) => {
+eventEmitter.on('newTxn', async (hash, username, txType) => {
     try {
 
-        logger.debug('new tx recived ', hash, username);
+        logger.debug(`new tx recived ${hash} username: ${username}`);
 
         // getting transction
         const txnData = await transactionModel.findOne({ txHash: hash });
-        logger.debug('data txn : ', txnData);
+        logger.debug(`data txn : ${txnData}`);
 
         // getting user info
         const userInfo = await walletModel.findOne({ username: username });
 
         // waiting for txn to get minted
+        // eslint-disable-next-line no-unused-vars
         let status;
-        waitForTxnToMint(hash).then((data) => {
-            // checking status
+        // checking status
+        if(txType == 'eth'){
+            const data = await waitForTxnToMint(hash);
             status = data ? 'Success' : 'Failed';
+        }else  {
+            const res = await queryWaiter(hash);
+            status = res.Exist  ? 'Success' : 'Failed';
+        }
 
-            // data to send to mail
-            const dataToSend = `<p><b>Transaction update :</b><br><br><b>txHash:</b>${hash}<br><br><b>Transaction status :</b> ${status} <br><br><b>Link : </b>https://goerli.etherscan.io/tx/${hash}</p>`;
+        // data to send to mail
+        const dataToSend = `<p><b>Transaction update :</b><br><br><b>txHash:</b>${hash}<br><br><b>Transaction status :</b> ${status} <br><br><b>Link : </b>https://goerli.etherscan.io/tx/${hash}</p>`;
 
-            sendFromGmail(dataToSend, 'Txn Update', userInfo.email);
+        sendFromGmail(dataToSend, 'Txn Update', userInfo.email);
 
-            // updating db of txn status
-            txnData.txStatus = status;
-            txnData.save();
-        });
-        logger.debug('status ',status);
+        // updating db of txn status
+        txnData.txStatus = status;
+        txnData.save();
 
+        logger.debug(`status ${status}`);
 
     } catch(err){
-        logger.error('event emit listner `newTxn` error : ',err.message);
+        logger.error(`event emit listner 'newTxn' error : ${err.message}`);
     }
 });
 
