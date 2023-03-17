@@ -16,6 +16,7 @@ import {
     getEthTransferGasEstimate,
     getMinimumAmount,
     tranderEthToUser,
+    AppTokenAddress
 } from '../utils/TransactionHelper.js';
 
 /**
@@ -200,8 +201,12 @@ const transferERC20 = async (from, assetAddress, amount, to) => {
                 message: 'Email sending of txn to user failed',
             };
         }
+        if(assetAddress == AppTokenAddress.toLowerCase()){
+            eventEmitter.emit('newTxn',success.txHash,FromuserData.username,'appToken');
+        } else {
+            eventEmitter.emit('newTxn',success.txHash,FromuserData.username,'erc20');
+        }
 
-        eventEmitter.emit('newTxn',success.txHash,FromuserData.username,'erc20');
 
         return {
             status: true,
@@ -478,10 +483,10 @@ eventEmitter.on('newTxn', async (hash, username, txType) => {
         // eslint-disable-next-line no-unused-vars
         let status;
         // checking status
-        if(txType == 'eth'){
+        if(txType == 'eth' || txType == 'erc20'){ // if any other txn than GLD token, app token
             const data = await waitForTxnToMint(hash);
             status = data ? 'Success' : 'Failed';
-        }else  {
+        }else  { // if it is an GLD token, app token
             const res = await queryWaiter(hash);
             status = res.Exist  ? 'Success' : 'Failed';
         }
